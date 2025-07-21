@@ -1,0 +1,8 @@
+# Netlify Build Configuration for the Learning Tracker project
+
+[build]
+  # The command to build the site
+  command = "npm run build"
+
+  # The directory that contains the deploy-ready assets
+  publish = "dist"
