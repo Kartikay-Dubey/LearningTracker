@@ -50,15 +50,7 @@ This project is built with a modern, scalable, and professional technology stack
 
 ---
 
-## 🚀 Getting Started
 
-To get a local copy up and running, follow these simple steps.
-
-### **Prerequisites**
-
--   Node.js (v18.x or higher)
--   npm or yarn
--   A free Supabase account ([signup here](https://supabase.com/))
 
 ### **Installation & Setup**
 
@@ -73,31 +65,7 @@ To get a local copy up and running, follow these simple steps.
     npm install
     ```
 
-3.  **Set up your environment variables**
-    -   Create a file named `.env` in the root of your project.
-    -   Log in to your Supabase project dashboard.
-    -   Go to **Project Settings** > **API**.
-    -   Find your **Project URL** and your **anon public key**.
-    -   Add them to your `.env` file like this:
-        ```env
-        VITE_SUPABASE_URL=https://your-project-url.supabase.co
-        VITE_SUPABASE_ANON_KEY=your-anon-public-key
         ```
-
-4.  **Set up the Supabase database and storage**
-    -   In your Supabase project, use the **SQL Editor** to create the `profiles` table using the schema defined in this project.
-    -   Enable **Row Level Security (RLS)** on the `profiles` table and add policies for `INSERT`, `SELECT`, and `UPDATE`.
-    -   Go to the **Storage** section, create a new **public** bucket named `avatars`.
-    -   Add RLS policies to the `avatars` bucket to allow users to manage their own files.
-
-5.  **Run the application**
-    ```sh
-    npm run dev
-    ```
-    The application should now be running on `http://localhost:5173`.
-
----
-
 ## 📞 Contact
 
 Kartikay Dubey - https://www.linkedin.com/in/kartikay-dubey-98ba73313/
