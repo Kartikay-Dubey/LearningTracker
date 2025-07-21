@@ -2,7 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Star, Zap } from "lucide-react";
 import type { Achievement } from "../../../stores/useStore";
-import confetti from 'react-confetti';
+import Confetti from 'react-confetti';
 
 interface AchievementModalProps {
   achievement: Achievement | null;
@@ -33,7 +33,7 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
         <>
           {/* Confetti for newly unlocked achievements */}
           {achievement.unlockedAt && (
-            <confetti
+            <Confetti
               width={window.innerWidth}
               height={window.innerHeight}
               recycle={false}

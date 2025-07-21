@@ -31,13 +31,13 @@ import {
   Link,
   Flame
 } from "lucide-react";
-import { useStore } from "../stores/useStore";
+import { useStore } from '../stores/useStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Pie, BarChart, Bar } from "recharts";
 import toast from "react-hot-toast";
 import CreateGoalModal from "../components/features/goals/CreateGoalModal";
 import AchievementCard from "../components/features/achievements/AchievementCard";
 import AchievementModal from "../components/features/achievements/AchievementModal";
-import type { Achievement } from "../../../stores/useStore";
+import type { Achievement } from '../stores/useStore';
 
 
 const DashboardPage: React.FC = () => {

@@ -34,6 +34,7 @@ import { useStore } from "../stores/useStore";
 import { useState } from "react";
 import AchievementCard from "../components/features/achievements/AchievementCard";
 import AchievementModal from "../components/features/achievements/AchievementModal";
+import type { Achievement } from '../stores/useStore';
 
 // Enhanced analytics data
 const analyticsData = [
@@ -652,7 +653,7 @@ const HomePage: React.FC = () => {
             </motion.a>
           </div>
           <p className="text-white text-center text-sm font-light">
-            &copy; {new Date().getFullYear()} LearnTrack. Built with <Heart className="inline w-4 h-4 text-pink-300" /> by <a href="mailto:your.email@example.com" className="underline hover:text-blue-200">Your Name</a>
+            &copy; {new Date().getFullYear()} LearnTrack. Built with <Heart className="inline w-4 h-4 text-pink-300" /> by <a href="mailto:your.email@example.com" className="underline hover:text-blue-200">Kartikay Dubey</a>
           </p>
         </div>
       </footer>
