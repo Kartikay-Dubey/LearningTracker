@@ -4,8 +4,8 @@
 
 ---
 
-🔗 **Live App**: [https://learntrack.vercel.app](https://learning-tracker-ot8kxc62o-kartikay-dubeys-projects.vercel.app/)  
-📂 **GitHub Repository**: [github.com/Kartikay-Dubey/LearnTrack](https://github.com/Kartikay-Dubey/LearningTracker)
+🔗 **Live App**: [(https://learning-tracker-ot8kxc62o-kartikay-dubeys-projects.vercel.app/)] 
+📂 **GitHub Repository**: [(https://github.com/Kartikay-Dubey/LearningTracker)]
 
 
 ## ✨ Overview
