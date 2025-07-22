@@ -6,3 +6,6 @@
 
   # The directory that contains the deploy-ready assets
   publish = "dist"
+
+[secrets]
+  scan_omit_keys = ["VITE_SUPABASE_ANON_KEY", "VITE_SUPABASE_URL"]
