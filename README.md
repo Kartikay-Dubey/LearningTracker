@@ -4,6 +4,10 @@
 
 ---
 
+🔗 **Live App**: [https://learntrack.vercel.app](https://learning-tracker-ot8kxc62o-kartikay-dubeys-projects.vercel.app/)  
+📂 **GitHub Repository**: [github.com/Kartikay-Dubey/LearnTrack](https://github.com/Kartikay-Dubey/LearningTracker)
+
+
 ## ✨ Overview
 
 **LearnTrack** is a fully-featured, responsive, and interactive learning tracker app built using a modern frontend and backend tech stack. It’s designed to help users:
@@ -127,7 +131,6 @@ This app is built with a scalable and modern technology stack:
 </table>
 
 </div>
----
 
 ## 👨‍💻 Developer
 
