@@ -4,10 +4,6 @@
 
 ---
 
-![LearnTrack Preview](https://github.com/user-attachments/assets/fcbd0f60-7a54-4ffa-b94c-984056356387)
-
----
-
 ## ✨ Overview
 
 **LearnTrack** is a fully-featured, responsive, and interactive learning tracker app built using a modern frontend and backend tech stack. It’s designed to help users:
