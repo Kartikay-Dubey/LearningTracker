@@ -59,6 +59,10 @@
 
 This app is built with a scalable and modern technology stack:
 
+## 🛠️ Tech Stack & Tools
+
+This app is built with a scalable and modern technology stack:
+
 <div align="center">
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
@@ -70,19 +74,59 @@ This app is built with a scalable and modern technology stack:
 ![Zustand](https://img.shields.io/badge/Zustand-4D2A2A?style=for-the-badge&logo=react&logoColor=white)
 
 </div>
-<center>
-| Stack Component     | Technology Used        |
-|---------------------|-------------------------|
-| **Frontend**        | React 18 + Vite         |
-| **Language**        | TypeScript              |
-| **Styling**         | Tailwind CSS            |
-| **Auth & Database** | Supabase (PostgreSQL)   |
-| **Storage**         | Supabase Storage        |
-| **State Mgmt**      | Zustand                 |
-| **Animations**      | Framer Motion           |
-| **Icons**           | Lucide React            |
-| **Charts**          | Recharts                |
-</center>
+
+---
+
+<div align="center">
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:center">🔧 Stack Component</th>
+      <th style="text-align:center">💻 Technology Used</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><strong>Frontend</strong></td>
+      <td align="center">React 18 + Vite</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Language</strong></td>
+      <td align="center">TypeScript</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Styling</strong></td>
+      <td align="center">Tailwind CSS</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Auth & Database</strong></td>
+      <td align="center">Supabase (PostgreSQL)</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Storage</strong></td>
+      <td align="center">Supabase Storage</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>State Management</strong></td>
+      <td align="center">Zustand</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Animations</strong></td>
+      <td align="center">Framer Motion</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Icons</strong></td>
+      <td align="center">Lucide React</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Charts</strong></td>
+      <td align="center">Recharts</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
 ---
 
 ## 👨‍💻 Developer
