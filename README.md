@@ -70,7 +70,7 @@ This app is built with a scalable and modern technology stack:
 ![Zustand](https://img.shields.io/badge/Zustand-4D2A2A?style=for-the-badge&logo=react&logoColor=white)
 
 </div>
-
+<center>
 | Stack Component     | Technology Used        |
 |---------------------|-------------------------|
 | **Frontend**        | React 18 + Vite         |
@@ -82,13 +82,12 @@ This app is built with a scalable and modern technology stack:
 | **Animations**      | Framer Motion           |
 | **Icons**           | Lucide React            |
 | **Charts**          | Recharts                |
-
+</center>
 ---
 
 ## 👨‍💻 Developer
 
 Built by **Kartikay Dubey**  
-Crafted with 💖 using *visual-first tools like Cursor* to make learning practical and fun.
 
 ---
 
