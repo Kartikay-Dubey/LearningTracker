@@ -1,8 +1,10 @@
 
 # 🚀 LearnTrack - Personal Learning Tracker
 
-![LearnTrack Hero Image](image.png)
-<!-- 
+![LearnTrack Homepage Image](<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/fcbd0f60-7a54-4ffa-b94c-984056356387" />)
+![LearnTrack Dashboard Image](<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/6b9d23aa-c7c9-441e-86fe-f2e31df9d59d" />)
+![LearnTrack Profile Image](<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e58feb08-2473-435b-824f-6e578a42b2f8" />)
+ 
 TODO: 
 1. Take a beautiful, wide screenshot of your application's dashboard or homepage.
 2. Upload it to a site like Imgur (https://imgur.com/upload).
@@ -49,28 +51,27 @@ This project is built with a modern, scalable, and professional technology stack
 -   **Charts**: Recharts
 
 ---
+## 👨‍💻 Developer
 
+Made by *Kartikay Dubey*  
+Built with love and practice using visual tools like *Cursor* to learn by doing ❤
 
+---
 
-### **Installation & Setup**
+## 📢 License & Usage
 
-1.  **Clone the repository**
-    ```sh
-    git clone https://github.com/your-username/learning-tracker-app.git
-    cd learning-tracker-app
-    ```
+This project is open for *viewing and learning purposes only*.  
+You are *not allowed to use, copy, modify, or distribute* this code without permission.
 
-2.  **Install NPM packages**
-    ```sh
-    npm install
-    ```
+© 2025 Kartikay Dubey. All rights reserved.
 
-        ```
-## 📞 Contact
+---
 
-Kartikay Dubey - https://www.linkedin.com/in/kartikay-dubey-98ba73313/
+## 📧 Contact & Support
 
-Project Link: [https://github.com/your-username/learning-tracker-app](https://github.com/Kartikay-Dubey/LearningTracker)
+If you liked this project, feel free to drop a ⭐ — it really motivates!  
+Have any suggestions, want to collaborate, or just say hi? I'd love to connect:
 
-<!-- Don't forget to replace the placeholder links above with your actual social and GitHub links! -->
-```
+- 🔗 [GitHub – Kartikay Dubey](https://github.com/Kartikay-Dubey)
+- 📸 [Instagram – Kartikay Dubey](https://www.instagram.com/altruistic_kd/)
+- 💼 [LinkedIn – Kartikay Dubey](https://www.linkedin.com/in/kartikay-dubey-98ba73313/)
