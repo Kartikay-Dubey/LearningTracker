@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '../lib/supabaseClient'; // Adjust the import based on your project structure
 
 export interface Goal {
   id: string;
@@ -60,6 +61,7 @@ interface AppState {
   unlockAchievement: (achievementId: string) => void;
   addXP: (amount: number) => void;
   updateStreak: () => void;
+  logout: () => Promise<void>; // Add logout function
 }
 
 const initialAchievements: Achievement[] = [
@@ -271,7 +273,11 @@ export const useStore = create<AppState>()(
       },
 
       toggleDarkMode: () => {
-        set((state) => ({ isDarkMode: !state.isDarkMode }));
+        set((state) => {
+          const newMode = !state.isDarkMode;
+          localStorage.setItem('theme', newMode ? 'dark' : 'light');
+          return { isDarkMode: newMode };
+        });
       },
 
       checkAchievements: () => {
@@ -393,7 +399,13 @@ export const useStore = create<AppState>()(
             }
           };
         });
-      }
+      },
+
+      logout: async () => {
+        await supabase.auth.signOut();
+        // Optionally clear user-related state here
+        window.location.href = "/auth"; // Redirect to login page after logout
+      },
     }),
     {
       name: 'learning-tracker-storage',

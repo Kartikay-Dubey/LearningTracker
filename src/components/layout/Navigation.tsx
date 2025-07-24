@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { 
@@ -11,16 +11,36 @@ import {
   Menu, 
   X,
   Bell,
-  Search
+  Search,
+  LogOut
 } from "lucide-react";
 import { useStore } from "../../stores/useStore";
+import { supabase } from "../../lib/supabaseClient";
 
 const Navigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  
+
   const isDarkMode = useStore((state) => state.isDarkMode);
   const toggleDarkMode = useStore((state) => state.toggleDarkMode);
+  const logout = useStore((state) => state.logout);
+
+  // Track login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check session on mount
+    supabase.auth.getSession().then(({ data }) => {
+      setIsLoggedIn(!!data.session);
+    });
+    // Listen for auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -104,6 +124,19 @@ const Navigation: React.FC = () => {
             >
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </motion.button>
+
+            {/* Logout Button */}
+            {isLoggedIn && (
+              <motion.button
+                className="p-2 text-red-500 hover:text-white hover:bg-red-600 rounded-lg transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={logout}
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </motion.button>
+            )}
 
             {/* Mobile menu button */}
             <button
