@@ -9,12 +9,12 @@ const blobs = [
   {
     style: "absolute w-[40vw] h-[40vw] bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 opacity-30 blur-3xl rounded-full top-[-10%] left-[-10%]",
     animate: { x: [0, 40, 0], y: [0, 40, 0] },
-    transition: { repeat: Infinity, duration: 18, ease: "easeInOut" }
+    transition: { repeat: Infinity, duration: 18, ease: ["easeInOut"] } // <-- FIXED
   },
   {
     style: "absolute w-[30vw] h-[30vw] bg-gradient-to-br from-pink-400 via-yellow-400 to-blue-400 opacity-20 blur-3xl rounded-full bottom-[-10%] right-[-10%]",
     animate: { x: [0, -30, 0], y: [0, -30, 0] },
-    transition: { repeat: Infinity, duration: 22, ease: "easeInOut" }
+    transition: { repeat: Infinity, duration: 22, ease: ["easeInOut"] } // <-- FIXED
   }
 ];
 
