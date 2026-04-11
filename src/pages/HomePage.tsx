@@ -140,31 +140,7 @@ const HomePage: React.FC = () => {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900`}>
-      {/* Enhanced Dynamic Background */}
-      <motion.div
-        className="fixed inset-0 -z-10 pointer-events-none"
-        aria-hidden
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
-        <motion.div
-          className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-blue-300 dark:bg-blue-900 rounded-full opacity-30 blur-3xl"
-          animate={{ x: [0, 40, 0], y: [0, 40, 0] }}
-          transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-purple-300 dark:bg-purple-900 rounded-full opacity-30 blur-3xl"
-          animate={{ x: [0, -40, 0], y: [0, -40, 0] }}
-          transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 w-[30vw] h-[30vw] bg-pink-300 dark:bg-pink-900 rounded-full opacity-20 blur-3xl"
-          animate={{ x: [0, 30, 0], y: [0, -30, 0] }}
-          transition={{ repeat: Infinity, duration: 16, ease: "easeInOut" }}
-        />
-      </motion.div>
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-premium-primary overflow-x-hidden transition-colors duration-300">
 
       {/* Hero Section */}
       <section className="relative flex flex-col items-center justify-center text-center py-20 px-4 sm:px-8">
@@ -174,14 +150,14 @@ const HomePage: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900 rounded-full text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+          <div className="inline-flex items-center px-4 py-2 bg-teal-50 dark:bg-premium-secondary rounded-full text-premium-accent border border-premium-accent/20 dark:border-premium-border text-sm font-medium mb-4">
             <Star className="w-4 h-4 mr-2" />
             Trusted by 10,000+ learners worldwide
           </div>
         </motion.div>
 
         <motion.h1
-          className="text-5xl sm:text-7xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6"
+          className="text-5xl sm:text-7xl font-extrabold text-slate-900 dark:text-slate-100 mb-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -207,7 +183,7 @@ const HomePage: React.FC = () => {
         >
           <Link to="/dashboard">
             <motion.button
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto flex items-center justify-center"
+              className="btn-primary w-full sm:w-auto flex items-center justify-center text-lg py-4 px-8"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -217,7 +193,7 @@ const HomePage: React.FC = () => {
           </Link>
           
           <motion.button
-            className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-4 px-8 rounded-xl text-lg hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-300 w-full sm:w-auto flex items-center justify-center"
+            className="btn-secondary w-full sm:w-auto flex items-center justify-center text-lg py-4 px-8"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -321,14 +297,14 @@ const HomePage: React.FC = () => {
           {steps.map((step, idx) => (
             <motion.div
               key={step.title}
-              className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300"
+              className="relative bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-8 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300 border border-transparent dark:border-premium-border"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: idx * 0.2 }}
               whileHover={{ y: -5 }}
             >
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-premium-accent rounded-full flex items-center justify-center text-white font-bold text-sm">
                 {step.step}
               </div>
               <div className="mb-6 mt-4">{step.icon}</div>
@@ -354,7 +330,7 @@ const HomePage: React.FC = () => {
           {features.map((feature, idx) => (
             <motion.div
               key={feature.title}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300 group"
+              className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-8 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300 group border border-transparent dark:border-premium-border"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -439,7 +415,7 @@ const HomePage: React.FC = () => {
             ].map((achievement, idx) => (
               <motion.div
                 key={achievement.title}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 text-center shadow-lg"
+                className="bg-white dark:bg-premium-card rounded-xl p-4 text-center shadow-lg shadow-black/5 dark:shadow-black/30 border border-transparent dark:border-premium-border"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -472,7 +448,7 @@ const HomePage: React.FC = () => {
         </motion.h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <motion.div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8"
+            className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-8 border border-transparent dark:border-premium-border"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -481,25 +457,25 @@ const HomePage: React.FC = () => {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Progress Over Time</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={analyticsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#444" : "#eee"} />
-                <XAxis dataKey="name" stroke={isDarkMode ? "#fff" : "#333"} />
-                <YAxis stroke={isDarkMode ? "#fff" : "#333"} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#334155" : "#eee"} />
+                <XAxis dataKey="name" stroke={isDarkMode ? "#cbd5e1" : "#333"} />
+                <YAxis stroke={isDarkMode ? "#cbd5e1" : "#333"} />
                 <Tooltip
                   contentStyle={{
-                    background: isDarkMode ? "#222" : "#fff",
-                    color: isDarkMode ? "#fff" : "#333",
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                    background: isDarkMode ? "#1e293b" : "#fff",
+                    color: isDarkMode ? "#f8fafc" : "#333",
+                    borderRadius: "12px",
+                    border: isDarkMode ? "1px solid #334155" : "none",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                   }}
                 />
                 <Line
                   type="monotone"
                   dataKey="Progress"
-                  stroke="#6366f1"
+                  stroke="#14B8A6"
                   strokeWidth={3}
-                  dot={{ r: 6, fill: "#a5b4fc" }}
-                  activeDot={{ r: 8, fill: "#6366f1" }}
+                  dot={{ r: 6, fill: "#0D9488", strokeWidth: 2 }}
+                  activeDot={{ r: 8, fill: "#14B8A6", strokeWidth: 0 }}
                   animationDuration={1200}
                 />
               </LineChart>
@@ -507,7 +483,7 @@ const HomePage: React.FC = () => {
           </motion.div>
           
           <motion.div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8"
+            className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-8 border border-transparent dark:border-premium-border"
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -516,19 +492,19 @@ const HomePage: React.FC = () => {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Goals Completed</h3>
             <ResponsiveContainer width="100%" height={300}>
               <RechartsBarChart data={analyticsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#444" : "#eee"} />
-                <XAxis dataKey="name" stroke={isDarkMode ? "#fff" : "#333"} />
-                <YAxis stroke={isDarkMode ? "#fff" : "#333"} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#334155" : "#eee"} />
+                <XAxis dataKey="name" stroke={isDarkMode ? "#cbd5e1" : "#333"} />
+                <YAxis stroke={isDarkMode ? "#cbd5e1" : "#333"} />
                 <Tooltip
                   contentStyle={{
-                    background: isDarkMode ? "#222" : "#fff",
-                    color: isDarkMode ? "#fff" : "#333",
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                    background: isDarkMode ? "#1e293b" : "#fff",
+                    color: isDarkMode ? "#f8fafc" : "#333",
+                    borderRadius: "12px",
+                    border: isDarkMode ? "1px solid #334155" : "none",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                   }}
                 />
-                <Bar dataKey="Goals" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Goals" fill="#F59E0B" radius={[4, 4, 0, 0]} />
               </RechartsBarChart>
             </ResponsiveContainer>
           </motion.div>
@@ -550,7 +526,7 @@ const HomePage: React.FC = () => {
           {testimonials.map((testimonial, idx) => (
             <motion.div
               key={testimonial.name}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8"
+              className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-8 border border-transparent dark:border-premium-border"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -558,7 +534,7 @@ const HomePage: React.FC = () => {
               whileHover={{ y: -5 }}
             >
               <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                <div className="w-12 h-12 bg-premium-accent rounded-full flex items-center justify-center text-white font-semibold mr-4">
                   {testimonial.avatar}
                 </div>
                 <div>
@@ -575,7 +551,7 @@ const HomePage: React.FC = () => {
       {/* CTA Section */}
       <section className="max-w-4xl mx-auto py-16 px-4 sm:px-8 text-center">
         <motion.div
-          className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-white"
+          className="bg-premium-secondary border border-premium-border rounded-3xl p-12 text-white shadow-xl shadow-black/10"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -585,7 +561,7 @@ const HomePage: React.FC = () => {
           <p className="text-xl mb-8 opacity-90">Join thousands of learners who are already achieving their goals with LearnTrack.</p>
           <Link to="/dashboard">
             <motion.button
-              className="bg-white text-blue-600 font-semibold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center mx-auto"
+              className="btn-primary flex items-center mx-auto text-lg py-4 px-8 mt-4 bg-white text-premium-accent hover:bg-gray-100"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -596,41 +572,16 @@ const HomePage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Enhanced Footer */}
-      <footer className="relative w-full mt-16">
-        {/* SVG Waves */}
-        <div className="absolute left-0 right-0 -top-1 w-full overflow-hidden leading-none pointer-events-none">
-          <svg
-            className="relative block w-full h-24"
-            viewBox="0 0 1440 100"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0,40 C360,120 1080,0 1440,80 L1440,100 L0,100 Z"
-              fill="#6366f1"
-              opacity="0.7"
-            />
-            <path
-              d="M0,60 C480,0 960,120 1440,40 L1440,100 L0,100 Z"
-              fill="#a5b4fc"
-              opacity="0.5"
-            />
-            <path
-              d="M0,80 C400,100 1040,0 1440,60 L1440,100 L0,100 Z"
-              fill="#818cf8"
-              opacity="0.3"
-            />
-          </svg>
-        </div>
+      <footer className="relative w-full mt-16 border-t border-gray-200 dark:border-premium-border">
         
         {/* Footer Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center py-12 bg-gradient-to-b from-indigo-500 via-indigo-600 to-indigo-700 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="relative z-10 flex flex-col items-center justify-center py-12 bg-white dark:bg-premium-primary">
           <div className="flex space-x-6 mb-6">
             <motion.a 
               href="https://github.com/your-github" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-white hover:text-blue-200 transition-colors duration-300"
+              className="text-gray-400 hover:text-premium-accent transition-colors duration-300"
               whileHover={{ scale: 1.1, y: -2 }}
             >
               <Github className="w-7 h-7" />
@@ -639,21 +590,21 @@ const HomePage: React.FC = () => {
               href="https://linkedin.com/in/your-linkedin" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-white hover:text-blue-200 transition-colors duration-300"
+              className="text-gray-400 hover:text-premium-accent transition-colors duration-300"
               whileHover={{ scale: 1.1, y: -2 }}
             >
               <Linkedin className="w-7 h-7" />
             </motion.a>
             <motion.a 
               href="mailto:your.email@example.com" 
-              className="text-white hover:text-blue-200 transition-colors duration-300"
+              className="text-gray-400 hover:text-premium-accent transition-colors duration-300"
               whileHover={{ scale: 1.1, y: -2 }}
             >
               <Mail className="w-7 h-7" />
             </motion.a>
           </div>
-          <p className="text-white text-center text-sm font-light">
-            &copy; {new Date().getFullYear()} LearnTrack. Built with <Heart className="inline w-4 h-4 text-pink-300" /> by <a href="mailto:your.email@example.com" className="underline hover:text-blue-200">Kartikay Dubey</a>
+          <p className="text-gray-500 dark:text-gray-400 text-center text-sm font-light mt-6">
+            &copy; {new Date().getFullYear()} LearnTrack. Built with <Heart className="inline w-4 h-4 text-premium-accent" /> by <a href="mailto:your.email@example.com" className="underline hover:text-premium-highlight">Kartikay Dubey</a>
           </p>
         </div>
       </footer>

@@ -3,29 +3,49 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-premium-primary: 11 18 32;
+    --color-premium-secondary: 17 24 39;
+    --color-premium-card: 31 41 55;
+    --color-premium-border: 55 65 81;
+    --color-premium-accent: 20 184 166;
+    --color-premium-highlight: 245 158 11;
+    --color-premium-danger: 239 68 68;
+  }
+  
+  .dark {
+    --color-premium-primary: 11 15 25;
+    --color-premium-secondary: 17 24 39;
+    --color-premium-card: 31 41 55;
+    --color-premium-border: 55 65 81;
+    --color-premium-accent: 249 115 22;
+    --color-premium-highlight: 251 191 36;
+    --color-premium-danger: 239 68 68;
+  }
+
   html {
     font-family: "Inter", system-ui, sans-serif;
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-[#F9FAFB] text-[#111827] dark:bg-premium-primary dark:text-[#E5E7EB] transition-colors duration-300;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-premium-accent hover:bg-teal-600 dark:hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 shadow-sm dark:shadow-orange-500/10 hover:shadow-md hover:scale-[1.02];
   }
   
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-white hover:bg-gray-50 border border-gray-300 dark:bg-transparent dark:hover:bg-premium-secondary dark:border-premium-border text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02];
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-white dark:bg-premium-card rounded-xl border border-gray-200 dark:border-premium-border p-6 transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.02] dark:hover:bg-slate-700;
   }
   
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-premium-border dark:bg-premium-secondary dark:text-white rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent transition-all duration-300;
   }
 }

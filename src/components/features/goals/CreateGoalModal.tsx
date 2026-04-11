@@ -102,15 +102,15 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-premium-card rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/30 border border-transparent dark:border-premium-border max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Create New Goal</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Goal</h2>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-premium-secondary rounded-lg transition-colors text-gray-500 dark:text-gray-400"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -120,27 +120,27 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Goal Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                   placeholder="e.g., Learn React Fundamentals"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                   rows={3}
                   placeholder="Describe your learning goal..."
                 />
@@ -149,13 +149,13 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
               {/* Category and Target Date */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Category
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                   >
                     {categories.map(category => (
                       <option key={category} value={category}>{category}</option>
@@ -164,21 +164,21 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Target Date
                   </label>
                   <input
                     type="date"
                     value={formData.targetDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, targetDate: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                   />
                 </div>
               </div>
 
               {/* Sub Tasks */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sub Tasks
                 </label>
                 <div className="space-y-2">
@@ -188,7 +188,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                         type="text"
                         value={task.title}
                         onChange={(e) => updateSubTask(task.id, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                         placeholder={`Sub task ${index + 1}`}
                       />
                     </div>
@@ -197,7 +197,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                 <button
                   type="button"
                   onClick={addSubTask}
-                  className="mt-2 flex items-center space-x-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="mt-2 flex items-center space-x-2 text-premium-accent hover:text-indigo-400 text-sm font-medium transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Sub Task</span>
@@ -206,7 +206,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
 
               {/* Links */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Useful Links
                 </label>
                 <div className="space-y-2">
@@ -217,7 +217,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                         type="url"
                         value={link}
                         onChange={(e) => updateLink(index, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                         placeholder="https://..."
                       />
                     </div>
@@ -226,7 +226,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                 <button
                   type="button"
                   onClick={addLink}
-                  className="mt-2 flex items-center space-x-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="mt-2 flex items-center space-x-2 text-premium-accent hover:text-indigo-400 text-sm font-medium transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Link</span>
@@ -235,13 +235,13 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Notes
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
                   rows={3}
                   placeholder="Additional notes..."
                 />
@@ -252,13 +252,13 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-6 py-3 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-premium-secondary transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                  className="btn-primary px-6 py-3"
                 >
                   Create Goal
                 </button>

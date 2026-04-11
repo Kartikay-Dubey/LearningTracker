@@ -233,7 +233,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-6">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-premium-primary p-4 sm:p-6 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         <motion.div 
           className="mb-8"
@@ -249,7 +249,7 @@ const ProfilePage: React.FC = () => {
             <div className="flex space-x-3">
               <motion.button
                 onClick={() => setIsEditing(!isEditing)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                className="btn-secondary flex items-center space-x-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -259,7 +259,7 @@ const ProfilePage: React.FC = () => {
               {isEditing && (
                 <motion.button
                   onClick={handleSaveProfile}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  className="btn-primary flex items-center space-x-2 ml-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -274,13 +274,13 @@ const ProfilePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Card */}
           <motion.div 
-            className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+            className="lg:col-span-2 bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <div className="flex items-center space-x-4 mb-6">
-              <div className="relative w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="relative w-16 h-16 bg-premium-accent rounded-full flex items-center justify-center overflow-hidden">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -311,7 +311,7 @@ const ProfilePage: React.FC = () => {
                     type="text"
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-bold text-xl"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white font-bold text-xl transition-all duration-300"
                   />
                 ) : (
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -336,7 +336,7 @@ const ProfilePage: React.FC = () => {
                   <textarea
                     value={profileData.bio}
                     onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all duration-300"
                     rows={3}
                   />
                 ) : (
@@ -348,7 +348,7 @@ const ProfilePage: React.FC = () => {
 
           {/* Stats Card */}
           <motion.div 
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+            className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -357,7 +357,7 @@ const ProfilePage: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Target className="w-5 h-5 text-blue-600" />
+                  <Target className="w-5 h-5 text-premium-accent" />
                   <span className="text-sm text-gray-600 dark:text-gray-300">Total Goals</span>
                 </div>
                 <span className="text-lg font-bold text-gray-900 dark:text-white">{stats.totalGoals}</span>
@@ -371,17 +371,17 @@ const ProfilePage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
+                  <Clock className="w-5 h-5 text-premium-accent" />
                   <span className="text-sm text-gray-600 dark:text-gray-300">In Progress</span>
                 </div>
-                <span className="text-lg font-bold text-blue-600">{stats.inProgressGoals}</span>
+                <span className="text-lg font-bold text-premium-accent">{stats.inProgressGoals}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                  <TrendingUp className="w-5 h-5 text-premium-highlight" />
                   <span className="text-sm text-gray-600 dark:text-gray-300">Avg Progress</span>
                 </div>
-                <span className="text-lg font-bold text-purple-600">{stats.averageProgress}%</span>
+                <span className="text-lg font-bold text-premium-highlight">{stats.averageProgress}%</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -396,7 +396,7 @@ const ProfilePage: React.FC = () => {
 
         {/* Settings Section */}
         <motion.div 
-          className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+          className="mt-8 bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
@@ -429,7 +429,7 @@ const ProfilePage: React.FC = () => {
                       ...prev,
                       notifications: { ...prev.notifications, push: e.target.checked }
                     }))}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-premium-accent focus:ring-premium-accent"
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-300">Push notifications</span>
                 </label>
@@ -460,7 +460,7 @@ const ProfilePage: React.FC = () => {
                       type="checkbox"
                       checked={isDarkMode}
                       onChange={toggleDarkMode}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-premium-accent focus:ring-premium-accent"
                     />
                     <span className="text-sm text-gray-600 dark:text-gray-300">Dark mode</span>
                   </label>
@@ -469,7 +469,7 @@ const ProfilePage: React.FC = () => {
                 <div className="flex space-x-3">
                   <motion.button
                     onClick={exportData}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-premium-secondary text-gray-700 dark:text-gray-200 border border-transparent dark:border-slate-600 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -484,13 +484,13 @@ const ProfilePage: React.FC = () => {
 
         {/* Achievements Section */}
         <motion.div 
-          className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+          className="mt-8 bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <Trophy className="w-5 h-5 mr-2 text-yellow-600" />
+            <Trophy className="w-5 h-5 mr-2 text-premium-highlight" />
             Achievements
           </h3>
           
@@ -509,7 +509,7 @@ const ProfilePage: React.FC = () => {
           
           {achievements.length > 8 && (
             <div className="text-center mt-4">
-              <button className="text-blue-600 dark:text-blue-400 hover:underline">
+              <button className="text-premium-accent hover:underline">
                 View All Achievements ({achievements.length})
               </button>
             </div>

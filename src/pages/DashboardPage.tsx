@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, 
@@ -38,6 +38,7 @@ import CreateGoalModal from "../components/features/goals/CreateGoalModal";
 import AchievementCard from "../components/features/achievements/AchievementCard";
 import AchievementModal from "../components/features/achievements/AchievementModal";
 import type { Achievement } from '../stores/useStore';
+import SyllabusToGoalsModal from "../components/features/goals/SyllabusAI/SyllabusToGoalsModal";
 
 
 const DashboardPage: React.FC = () => {
@@ -49,6 +50,7 @@ const DashboardPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("week");
+  const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
   
   const goals = useStore((state) => state.goals);
   const updateGoal = useStore((state) => state.updateGoal);
@@ -56,6 +58,7 @@ const DashboardPage: React.FC = () => {
   const toggleSubTask = useStore((state) => state.toggleSubTask);
   const achievements = useStore((state) => state.achievements);
   const userStats = useStore((state) => state.userStats);
+  const isDarkMode = useStore((state) => state.isDarkMode);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
 
@@ -127,11 +130,11 @@ const DashboardPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400';
       case 'In Progress':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-gray-100 text-gray-800 dark:bg-premium-secondary dark:text-gray-300';
     }
   };
 
@@ -220,7 +223,7 @@ const DashboardPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-6">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-premium-primary p-4 sm:p-6 transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <motion.div 
@@ -237,20 +240,33 @@ const DashboardPage: React.FC = () => {
             <div className="flex items-center space-x-3">
               <motion.button
                 onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200"
+                className="p-2 rounded-lg bg-white dark:bg-premium-card shadow-sm hover:shadow-md transition-all duration-200 border border-transparent dark:border-premium-border"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label="Toggle View"
               >
                 {viewMode === "grid" ? <BarChart3 className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
               </motion.button>
               <motion.button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+                className="btn-primary flex items-center space-x-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label="New Goal"
               >
                 <Plus className="w-5 h-5" />
                 <span>New Goal</span>
+              </motion.button>
+              <motion.button
+                onClick={() => setIsSyllabusModalOpen(true)}
+                className="btn-secondary flex items-center space-x-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="AI Syllabus to Goals"
+                title="Generate learning goals from a syllabus PDF"
+              >
+                <FileText className="w-5 h-5" />
+                <span>AI Syllabus to Goals</span>
               </motion.button>
             </div>
           </div>
@@ -260,7 +276,7 @@ const DashboardPage: React.FC = () => {
             {stats.map((stat, idx) => (
               <motion.div 
                 key={stat.title}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white dark:bg-premium-card rounded-2xl p-6 shadow-lg shadow-black/5 dark:shadow-black/30 border border-transparent dark:border-premium-border hover:shadow-xl transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
@@ -286,7 +302,7 @@ const DashboardPage: React.FC = () => {
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8">
+          <div className="bg-white dark:bg-premium-card rounded-2xl p-6 shadow-lg shadow-black/5 dark:shadow-black/30 border border-transparent dark:border-premium-border mb-8">
             <div className="flex flex-col lg:flex-row gap-4 items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -295,13 +311,13 @@ const DashboardPage: React.FC = () => {
                   placeholder="Search goals..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-premium-border rounded-xl focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all duration-300"
                 />
               </div>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-3 border border-gray-200 dark:border-premium-border rounded-xl focus:ring-2 focus:ring-premium-accent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all duration-300"
               >
                 <option value="all">All Status</option>
                 <option value="To Do">To Do</option>
@@ -311,7 +327,7 @@ const DashboardPage: React.FC = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="px-4 py-3 border border-gray-200 dark:border-premium-border rounded-xl focus:ring-2 focus:ring-premium-accent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all duration-300"
               >
                 <option value="createdAt">Date Created</option>
                 <option value="title">Title</option>
@@ -320,7 +336,7 @@ const DashboardPage: React.FC = () => {
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                className="p-3 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="p-3 border border-gray-200 dark:border-premium-border rounded-xl hover:bg-gray-50 dark:hover:bg-premium-secondary transition-colors"
               >
                 {sortOrder === "asc" ? <SortAsc className="w-5 h-5" /> : <SortDesc className="w-5 h-5" />}
               </button>
@@ -335,33 +351,34 @@ const DashboardPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <div className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-              <TrendingUp className="w-6 h-6 mr-2 text-blue-600" />
+              <TrendingUp className="w-6 h-6 mr-2 text-premium-accent" />
               Progress Over Time
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={analyticsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#334155" : "#e5e7eb"} />
+                <XAxis dataKey="name" stroke={isDarkMode ? "#cbd5e1" : "#6b7280"} />
+                <YAxis stroke={isDarkMode ? "#cbd5e1" : "#6b7280"} />
                 <Tooltip
                   contentStyle={{
-                    background: "#fff",
-                    border: "none",
-                    borderRadius: "8px",
+                    background: isDarkMode ? "#1e293b" : "#fff",
+                    color: isDarkMode ? "#f8fafc" : "#333",
+                    border: isDarkMode ? "1px solid #334155" : "none",
+                    borderRadius: "12px",
                     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   }}
                 />
-                <Line type="monotone" dataKey="Progress" stroke="#3b82f6" strokeWidth={3} />
-                <Line type="monotone" dataKey="Goals" stroke="#10b981" strokeWidth={3} />
+                <Line type="monotone" dataKey="Progress" stroke="#14B8A6" strokeWidth={3} dot={{ r: 4, fill: "#0D9488" }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="Goals" stroke="#F59E0B" strokeWidth={3} dot={{ r: 4, fill: "#d97706" }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <div className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-              <PieChart className="w-6 h-6 mr-2 text-purple-600" />
+              <PieChart className="w-6 h-6 mr-2 text-premium-accent" />
               Goals Distribution
             </h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -400,18 +417,18 @@ const DashboardPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <div className="bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 p-6 border border-transparent dark:border-premium-border">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <Trophy className="w-6 h-6 mr-2 text-yellow-600" />
+                <Trophy className="w-6 h-6 mr-2 text-premium-highlight" />
                 Achievements & Streaks
               </h3>
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-premium-danger to-red-400 text-white px-3 py-1 rounded-full shadow-sm">
                   <Flame className="w-4 h-4" />
                   <span className="text-sm font-medium">{userStats.currentStreak} Day Streak</span>
                 </div>
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-premium-highlight to-yellow-400 text-white px-3 py-1 rounded-full shadow-sm">
                   <Star className="w-4 h-4" />
                   <span className="text-sm font-medium">Level {userStats.level}</span>
                 </div>
@@ -422,7 +439,7 @@ const DashboardPage: React.FC = () => {
               {achievementStats.map((stat, idx) => (
                 <motion.div 
                   key={stat.title}
-                  className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center"
+                  className="bg-gray-50 dark:bg-premium-secondary rounded-xl p-4 text-center border border-transparent dark:border-slate-700/50"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 + idx * 0.1 }}
@@ -471,7 +488,7 @@ const DashboardPage: React.FC = () => {
             {filteredGoals.map((goal, index) => (
               <motion.div 
                 key={goal.id} 
-                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 cursor-pointer hover:shadow-xl transition-all duration-300 ${
+                className={`bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 border border-gray-100 dark:border-slate-700 p-6 cursor-pointer hover:shadow-xl transition-all duration-300 ${
                   viewMode === "list" ? "flex items-center space-x-4" : ""
                 }`}
                 variants={cardVariants}
@@ -519,12 +536,12 @@ const DashboardPage: React.FC = () => {
                       <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{goal.category}</span>
                     </div>
                     
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-3 overflow-hidden">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 mb-3 overflow-hidden">
                       <motion.div 
                         className={`h-3 rounded-full ${
                           goal.status === "Completed" 
-                            ? "bg-gradient-to-r from-green-400 to-green-600" 
-                            : "bg-gradient-to-r from-blue-400 to-blue-600"
+                            ? "bg-premium-accent" 
+                            : "bg-premium-highlight"
                         }`}
                         initial={{ width: 0 }}
                         animate={{ width: `${goal.progress}%` }}
@@ -538,7 +555,7 @@ const DashboardPage: React.FC = () => {
                         value={goal.status}
                         onChange={(e) => handleStatusChange(goal.id, e.target.value as any)}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="text-xs border border-gray-300 dark:border-slate-600 rounded px-2 py-1 focus:ring-2 focus:ring-premium-accent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white"
                       >
                         <option value="To Do">To Do</option>
                         <option value="In Progress">In Progress</option>
@@ -553,7 +570,7 @@ const DashboardPage: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"
+                    className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700"
                   >
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{goal.description}</p>
                     
@@ -617,7 +634,7 @@ const DashboardPage: React.FC = () => {
             {!searchTerm && filterStatus === "all" && (
               <motion.button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                className="btn-primary py-4 px-8 mt-4"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -640,6 +657,10 @@ const DashboardPage: React.FC = () => {
           setShowAchievementModal(false);
           setSelectedAchievement(null);
         }}
+      />
+      <SyllabusToGoalsModal
+        isOpen={isSyllabusModalOpen}
+        onClose={() => setIsSyllabusModalOpen(false)}
       />
     </div>
   );

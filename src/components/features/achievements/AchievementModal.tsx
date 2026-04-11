@@ -19,11 +19,11 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'common': return 'from-gray-400 to-gray-600';
-      case 'rare': return 'from-blue-400 to-blue-600';
-      case 'epic': return 'from-purple-400 to-purple-600';
-      case 'legendary': return 'from-yellow-400 to-yellow-600';
-      default: return 'from-gray-400 to-gray-600';
+      case 'common': return 'bg-slate-500';
+      case 'rare': return 'bg-blue-500';
+      case 'epic': return 'bg-indigo-500';
+      case 'legendary': return 'bg-premium-highlight';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -49,7 +49,7 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
             onClick={onClose}
           >
             <motion.div
-              className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 relative"
+              className="bg-white dark:bg-premium-card border border-transparent dark:border-premium-border rounded-2xl p-8 max-w-md w-full mx-4 relative shadow-2xl shadow-black/30"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -67,7 +67,7 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
               <div className="text-center">
                 {/* Icon */}
                 <motion.div
-                  className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r ${getRarityColor(achievement.rarity)} flex items-center justify-center text-3xl`}
+                  className={`w-20 h-20 mx-auto mb-6 rounded-full text-white ${getRarityColor(achievement.rarity)} flex items-center justify-center text-3xl shadow-lg`}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
@@ -108,7 +108,7 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
 
                 {/* XP Reward */}
                 <motion.div
-                  className="bg-gradient-to-r from-green-400 to-green-600 text-white px-6 py-3 rounded-xl font-semibold"
+                  className="bg-premium-accent text-white px-6 py-3 rounded-xl font-semibold shadow-md"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.6 }}
