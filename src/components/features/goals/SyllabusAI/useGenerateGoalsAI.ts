@@ -1,25 +1,13 @@
 import { useState } from "react";
 
 export interface LearningGoal {
-  goal: string;
+  title: string;
   description: string;
   difficulty: "Easy" | "Medium" | "Hard";
-  timeEstimate: string;
+  estimated_time: string;
   prerequisites?: string[];
   resources?: string[];
 }
-
-const SYSTEM_PROMPT = `
-You are an AI assistant for a learning tracker app. Given the following academic syllabus, break it into a list of smart, structured learning goals. Each goal must include:
-- Goal Title
-- Description
-- Difficulty level (Easy, Medium, Hard)
-- Time Estimate (days or hours)
-- Optional Resources
-- Prerequisites (if any)
-
-Syllabus Text:
-`;
 
 export function useGenerateGoalsAI() {
   const [loading, setLoading] = useState(false);
@@ -35,21 +23,39 @@ export function useGenerateGoalsAI() {
         body: JSON.stringify({ syllabusText }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response from OpenAI.");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to get response from Backend.");
+      }
 
       const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) throw new Error("No content in OpenAI response.");
+      const content = data?.choices?.[0]?.message?.content || "No response received";
+
+      if (!data?.choices?.length) {
+        throw new Error("Empty response from AI");
+      }
 
       console.log("OpenAI response content:", content);
 
-      // Try to find and parse JSON in the response
-      const jsonStart = content.indexOf("[");
-      const jsonEnd = content.lastIndexOf("]");
-      if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in response.");
-      const jsonString = content.slice(jsonStart, jsonEnd + 1);
+      // Parse JSON directly since backend forces json_object format
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+      } catch (parseErr) {
+        parsed = { goals: [{ title: "Fallback Goal", description: content, difficulty: "Medium", estimated_time: "Unknown", prerequisites: [], resources: [] }] };
+      }
+      
+      let goals: LearningGoal[] = [];
+      if (Array.isArray(parsed)) {
+        goals = parsed;
+      } else if (parsed.goals && Array.isArray(parsed.goals)) {
+        goals = parsed.goals;
+      } else {
+        goals = Object.values(parsed).find(Array.isArray) as LearningGoal[] || [];
+      }
 
-      const goals: LearningGoal[] = JSON.parse(jsonString);
+      if (!goals.length) throw new Error("AI did not extract any valid goals.");
+
       setLoading(false);
       return goals;
     } catch (err: any) {

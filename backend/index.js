@@ -2,59 +2,137 @@ const express = require("express");
 const cors = require("cors");
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 require("dotenv").config();
+const { OpenAI } = require("openai");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+  defaultHeaders: {
+    "HTTP-Referer": "http://localhost:5173",
+    "X-Title": "Learning Tracker",
+  }
+});
+
 app.post("/api/generate-goals", async (req, res) => {
   const { syllabusText } = req.body;
   if (!syllabusText) return res.status(400).json({ error: "Missing syllabusText" });
 
-  // === DEBUG LOGS START ===
   console.log("Received request to /api/generate-goals");
-  console.log("OPENAI_API_KEY present?", !!process.env.OPENAI_API_KEY);
+  console.log("OPENROUTER_API_KEY present?", !!process.env.OPENROUTER_API_KEY);
   console.log("First 100 chars of syllabusText:", syllabusText.slice(0, 100));
-  // === DEBUG LOGS END ===
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You are an AI assistant for a learning tracker app. Given the following academic syllabus, break it into a list of smart, structured learning goals. Each goal must include:
-- Goal Title
-- Description
-- Difficulty level (Easy, Medium, Hard)
-- Time Estimate (days or hours)
-- Optional Resources
-- Prerequisites (if any)
+    const response = await openai.chat.completions.create({
+      model: "mistralai/mistral-7b-instruct-v0.1",
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI assistant for a learning tracker app. Given the following academic syllabus, break it into a list of smart, structured learning goals. 
 
-Syllabus Text:`,
-          },
-          { role: "user", content: syllabusText },
-        ],
-        temperature: 0.3,
-        max_tokens: 1200,
-      }),
+You MUST return ONLY a valid JSON object with a single key "goals" containing an array of objects. Do not output markdown blocks like \`\`\`json. OUTPUT NOTHING EXCEPT RAW JSON.
+Each object MUST have the following structure:
+{
+  "title": "Module or Topic Name",
+  "description": "Short description of what to learn",
+  "difficulty": "Easy", // or Medium, Hard
+  "estimated_time": "Time in hours or days",
+  "prerequisites": ["List", "of", "strings"],
+  "resources": ["Links", "or", "book names"]
+}`
+        },
+        { role: "user", content: syllabusText },
+      ],
+      temperature: 0.3,
+      max_tokens: 1500,
     });
 
-    const data = await response.json();
-    // === DEBUG LOG: OpenAI response ===
-    console.log("OpenAI API response:", data);
+    // OpenAI modern structure returns directly accessible fields
+    const content = response?.choices?.[0]?.message?.content || "No response received";
+    if (!response?.choices?.length) {
+      throw new Error("Empty response from AI");
+    }
+    console.log("OpenAI API response received successfully.");
 
-    res.json(data);
+    // Silently route the syllabus to the ML service context buffer
+    fetch("http://127.0.0.1:8000/store", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_text: syllabusText })
+    }).catch(err => console.error("ML Service unavailable. Context skipped."));
+
+    // We emulate the older JSON payload structure for the frontend backward compatibility
+    res.json({
+      choices: [{ message: { content } }]
+    });
+
   } catch (err) {
-    // === DEBUG LOG: Error ===
-    console.error("Error in /api/generate-goals:", err);
-    res.status(500).json({ error: "Failed to get response from OpenAI." });
+    console.error("API Error in /api/generate-goals:", err.response?.data || err.message);
+    res.status(500).json({ error: (err.response?.data ? JSON.stringify(err.response.data) : err.message) || "Failed to get response from OpenAI." });
+  }
+});
+
+// Chatbot Endpoint (Doubt Solver with Semantic Context)
+app.post("/api/chat", async (req, res) => {
+  const { query, history } = req.body;
+  if (!query) return res.status(400).json({ error: "Missing query" });
+
+  try {
+    console.log(`Received chat query: ${query.substring(0, 50)}...`);
+    
+    // 1. Semantic Search local Context via ML Service
+    let context = "";
+    try {
+      const mlResponse = await fetch("http://127.0.0.1:8000/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, n_results: 3 })
+      });
+      if (mlResponse.ok) {
+        const mlData = await mlResponse.json();
+        context = mlData.context || "";
+        console.log(`ML Context retrieved: ${context.length} chars`);
+      } else {
+        console.error("ML response not ok:", mlResponse.status);
+      }
+    } catch (mlErr) {
+      console.error("ML Service query failed, proceeding without context.");
+    }
+
+    // 2. Query OpenAI RAG architecture
+    const systemPrompt = context 
+      ? `You are an intelligent learning assistant. Answer the user's questions utilizing the following context from their uploaded syllabus/documents:\n\n---\n${context}\n---\n\nIf the answer is not in the context, you can use your general knowledge, but prioritize the context. Keep answers concise, and professional.`
+      : `You are an intelligent learning assistant. Help the user with their educational questions. Keep answers concise, and professional.`;
+
+    const chatHistory = history || [];
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...chatHistory,
+      { role: "user", content: query }
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "mistralai/mistral-7b-instruct-v0.1",
+      messages: messages,
+      temperature: 0.5,
+    });
+
+    const content = response?.choices?.[0]?.message?.content || "No response received";
+    if (!response?.choices?.length) {
+      throw new Error("Empty response from AI");
+    }
+    console.log("Chat OpenAI response successful:", content.substring(0, 50));
+
+    res.json({
+      choices: [{ message: { content } }]
+    });
+
+  } catch (err) {
+    console.error("API Error in /api/chat:", err.response?.data || err.message);
+    res.status(500).json({ error: (err.response?.data ? JSON.stringify(err.response.data) : err.message) || "Failed to process chat response." });
   }
 });
 
