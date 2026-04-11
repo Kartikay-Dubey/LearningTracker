@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import workerSrc from "pdfjs-dist/build/pdf.worker.js?url";
+import { createWorker } from "tesseract.js";
 
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = workerSrc;
 
@@ -24,29 +25,33 @@ export function useExtractTextFromPDF() {
 
       let finalStr = text.trim();
 
-      // OCR Fallback if standard extraction fails
+      // OCR Fallback if standard extraction fails (e.g. Scanned PDF)
       if (finalStr.length < 50) {
-        console.log("Empty text detected. Running OCR Fallback...");
-        const Tesseract = await import("tesseract.js");
+        console.log("Empty text detected. Running OCR Fallback via Tesseract.js...");
         let ocrText = "";
-        // Process max 5 pages for OCR to prevent browser freeze
         const maxPages = Math.min(pdf.numPages, 5); 
-        for (let i = 1; i <= maxPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 1.5 });
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-          if (context) {
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            await page.render({ canvasContext: context, viewport }).promise;
-            
-            const result = await Tesseract.recognize(canvas, 'eng');
-            ocrText += result.data.text + " ";
+        
+        try {
+          const worker = await createWorker('eng');
+          for (let i = 1; i <= maxPages; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            if (context) {
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              await page.render({ canvasContext: context, viewport }).promise;
+              
+              const result = await worker.recognize(canvas);
+              ocrText += result.data.text + " ";
+            }
           }
+          await worker.terminate();
+        } catch (tcrErr) {
+          console.error("Tesseract Fallback failed:", tcrErr);
         }
-        finalStr = ocrText.trim();
+        finalStr = ocrText.trim() || finalStr;
       }
 
       // Cleanup Noise

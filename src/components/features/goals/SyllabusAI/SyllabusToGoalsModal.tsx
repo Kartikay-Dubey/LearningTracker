@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import SyllabusUpload from "./SyllabusUpload";
 import { useExtractTextFromPDF } from "./useExtractTextFromPDF";
 import { useGenerateGoalsAI, LearningGoal } from "./useGenerateGoalsAI";
+import { useStore } from "../../../../stores/useStore";
 
 interface SyllabusToGoalsModalProps {
   isOpen: boolean;
@@ -15,6 +16,9 @@ const SyllabusToGoalsModal: React.FC<SyllabusToGoalsModalProps> = ({ isOpen, onC
   const [fileName, setFileName] = useState<string | null>(null);
   const [pdfText, setPdfText] = useState<string | null>(null);
   const [goals, setGoals] = useState<LearningGoal[] | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const addGoal = useStore((state) => state.addGoal);
+  const existingGoals = useStore((state) => state.goals);
 
   const { extractText, extracting, error: extractError } = useExtractTextFromPDF();
   const { generateGoals, loading: aiLoading, error: aiError } = useGenerateGoalsAI();
@@ -35,7 +39,28 @@ const SyllabusToGoalsModal: React.FC<SyllabusToGoalsModalProps> = ({ isOpen, onC
     if (!pdfText) return;
     setGoals(null);
     const result = await generateGoals(pdfText);
-    setGoals(result);
+    
+    if (result && result.length > 0) {
+      result.forEach(goal => {
+        if (!existingGoals.some(g => g.title === goal.title)) {
+          addGoal({
+             title: goal.title,
+             description: goal.description,
+             category: "Syllabus (Auto-Generated)",
+             progress: 0,
+             status: "To Do",
+             timeSpent: "0h",
+             targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+             subTasks: [],
+             notes: `Difficulty: ${goal.difficulty} | Estimated Time: ${goal.estimated_time}\nPrerequisites: ${goal.prerequisites?.join(', ') || 'None'}`,
+             links: goal.resources || []
+          });
+        }
+      });
+      setGoals(result);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    }
   };
 
   // Reset state on close
@@ -140,6 +165,16 @@ const SyllabusToGoalsModal: React.FC<SyllabusToGoalsModalProps> = ({ isOpen, onC
                     </div>
                   ))}
                 </div>
+              )}
+              {showToast && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 p-4 rounded-xl border border-green-200 dark:border-green-800 text-center font-medium"
+                >
+                  🎉 Goals successfully generated and added to your dashboard!
+                </motion.div>
               )}
             </div>
           </motion.div>

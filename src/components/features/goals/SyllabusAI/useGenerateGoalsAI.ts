@@ -23,11 +23,17 @@ export function useGenerateGoalsAI() {
         body: JSON.stringify({ syllabusText }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response from Backend.");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to get response from Backend.");
+      }
 
       const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) throw new Error("No content in OpenAI response.");
+      const content = data?.choices?.[0]?.message?.content || "No response received";
+
+      if (!data?.choices?.length) {
+        throw new Error("Empty response from AI");
+      }
 
       console.log("OpenAI response content:", content);
 
@@ -36,10 +42,18 @@ export function useGenerateGoalsAI() {
       try {
         parsed = JSON.parse(content);
       } catch (parseErr) {
-        throw new Error("Invalid JSON structure returned by AI.");
+        parsed = { goals: [{ title: "Fallback Goal", description: content, difficulty: "Medium", estimated_time: "Unknown", prerequisites: [], resources: [] }] };
       }
       
-      const goals: LearningGoal[] = parsed.goals || [];
+      let goals: LearningGoal[] = [];
+      if (Array.isArray(parsed)) {
+        goals = parsed;
+      } else if (parsed.goals && Array.isArray(parsed.goals)) {
+        goals = parsed.goals;
+      } else {
+        goals = Object.values(parsed).find(Array.isArray) as LearningGoal[] || [];
+      }
+
       if (!goals.length) throw new Error("AI did not extract any valid goals.");
 
       setLoading(false);
