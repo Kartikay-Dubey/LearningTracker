@@ -103,14 +103,14 @@ const SyllabusToGoalsModal: React.FC<SyllabusToGoalsModalProps> = ({ isOpen, onC
                       key={idx}
                       className="border border-gray-200 dark:border-slate-700 rounded-xl p-4 bg-gray-50 dark:bg-premium-secondary"
                     >
-                      <h3 className="font-semibold text-lg mb-1">{goal.goal}</h3>
+                      <h3 className="font-semibold text-lg mb-1">{goal.title}</h3>
                       <p className="mb-2 text-gray-700 dark:text-gray-200">{goal.description}</p>
                       <div className="flex flex-wrap gap-2 text-sm mb-1">
                         <span className="px-2 py-1 bg-teal-50 text-premium-accent dark:bg-premium-accent/20 rounded font-medium border border-premium-accent/20">
                           Difficulty: {goal.difficulty}
                         </span>
                         <span className="px-2 py-1 bg-slate-100 text-slate-700 dark:bg-premium-secondary dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
-                          Time: {goal.timeEstimate}
+                          Time: {goal.estimated_time}
                         </span>
                         {goal.prerequisites && goal.prerequisites.length > 0 && (
                           <span className="px-2 py-1 bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 rounded">

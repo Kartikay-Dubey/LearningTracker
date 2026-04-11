@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashboardPage";
 // import GoalsPage from "./pages/GoalsPage";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
+import ChatPanel from "./components/layout/ChatPanel";
 
 function App() {
   const isDarkMode = useStore((state) => state.isDarkMode);
@@ -41,6 +42,7 @@ function App() {
             },
           }}
         />
+        <ChatPanel />
       </div>
     </Router>
   );

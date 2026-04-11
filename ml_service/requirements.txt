@@ -1,0 +1,6 @@
+fastapi==0.103.1
+uvicorn[standard]==0.23.2
+sentence-transformers==2.2.2
+faiss-cpu==1.8.0.post1
+pydantic==1.10.13
+openai==0.28.1

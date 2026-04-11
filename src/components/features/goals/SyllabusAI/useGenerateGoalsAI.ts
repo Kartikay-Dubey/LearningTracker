@@ -1,25 +1,13 @@
 import { useState } from "react";
 
 export interface LearningGoal {
-  goal: string;
+  title: string;
   description: string;
   difficulty: "Easy" | "Medium" | "Hard";
-  timeEstimate: string;
+  estimated_time: string;
   prerequisites?: string[];
   resources?: string[];
 }
-
-const SYSTEM_PROMPT = `
-You are an AI assistant for a learning tracker app. Given the following academic syllabus, break it into a list of smart, structured learning goals. Each goal must include:
-- Goal Title
-- Description
-- Difficulty level (Easy, Medium, Hard)
-- Time Estimate (days or hours)
-- Optional Resources
-- Prerequisites (if any)
-
-Syllabus Text:
-`;
 
 export function useGenerateGoalsAI() {
   const [loading, setLoading] = useState(false);
@@ -35,7 +23,7 @@ export function useGenerateGoalsAI() {
         body: JSON.stringify({ syllabusText }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response from OpenAI.");
+      if (!response.ok) throw new Error("Failed to get response from Backend.");
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
@@ -43,13 +31,17 @@ export function useGenerateGoalsAI() {
 
       console.log("OpenAI response content:", content);
 
-      // Try to find and parse JSON in the response
-      const jsonStart = content.indexOf("[");
-      const jsonEnd = content.lastIndexOf("]");
-      if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in response.");
-      const jsonString = content.slice(jsonStart, jsonEnd + 1);
+      // Parse JSON directly since backend forces json_object format
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+      } catch (parseErr) {
+        throw new Error("Invalid JSON structure returned by AI.");
+      }
+      
+      const goals: LearningGoal[] = parsed.goals || [];
+      if (!goals.length) throw new Error("AI did not extract any valid goals.");
 
-      const goals: LearningGoal[] = JSON.parse(jsonString);
       setLoading(false);
       return goals;
     } catch (err: any) {
