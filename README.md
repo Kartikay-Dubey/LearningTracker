@@ -4,7 +4,7 @@
 
 ---
 
-🔗 **Live App**: (https://learning-tracker-ot8kxc62o-kartikay-dubeys-projects.vercel.app/) 
+🔗 **Live App**: (https://learning-tracker-aggo-kartikay-dubeys-projects.vercel.app/) 
 
 ## ✨ Overview
 
