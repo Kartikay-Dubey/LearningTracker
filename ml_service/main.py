@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import faiss
 
+ML_API_URL = os.getenv("ML_API_URL", "http://localhost:8000")
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

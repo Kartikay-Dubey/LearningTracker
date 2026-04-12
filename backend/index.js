@@ -6,11 +6,7 @@ const { OpenAI } = require("openai");
 
 const app = express();
 app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
-  credentials: true
+  origin: "*"
 }));
 app.use(express.json());
 
