@@ -551,7 +551,7 @@ const HomePage: React.FC = () => {
       {/* CTA Section */}
       <section className="max-w-4xl mx-auto py-16 px-4 sm:px-8 text-center">
         <motion.div
-          className="bg-premium-secondary border border-premium-border rounded-3xl p-12 text-white shadow-xl shadow-black/10"
+          className="bg-white dark:bg-premium-secondary border border-gray-200 dark:border-premium-border rounded-3xl p-12 text-slate-900 dark:text-white shadow-xl dark:shadow-black/10"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -561,7 +561,7 @@ const HomePage: React.FC = () => {
           <p className="text-xl mb-8 opacity-90">Join thousands of learners who are already achieving their goals with LearnTrack.</p>
           <Link to="/dashboard">
             <motion.button
-              className="btn-primary flex items-center mx-auto text-lg py-4 px-8 mt-4 bg-white text-premium-accent hover:bg-gray-100"
+              className="btn-primary flex items-center mx-auto text-lg py-4 px-8 mt-4 bg-teal-600 dark:bg-white text-white dark:text-premium-accent hover:bg-teal-700 dark:hover:bg-gray-100 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -576,31 +576,41 @@ const HomePage: React.FC = () => {
         
         {/* Footer Content */}
         <div className="relative z-10 flex flex-col items-center justify-center py-12 bg-white dark:bg-premium-primary">
-          <div className="flex space-x-6 mb-6">
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10 mb-6">
             <motion.a 
-              href="https://github.com/your-github" 
+              href="https://github.com/Kartikay-Dubey" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-premium-accent transition-colors duration-300"
-              whileHover={{ scale: 1.1, y: -2 }}
+              className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-orange-400 dark:hover:text-premium-accent transition-colors duration-300"
+              whileHover={{ scale: 1.05, y: -2 }}
             >
-              <Github className="w-7 h-7" />
+              <Github className="w-5 h-5" /> <span>GitHub</span>
             </motion.a>
             <motion.a 
-              href="https://linkedin.com/in/your-linkedin" 
+              href="https://www.instagram.com/altruistic_kd/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-gray-400 hover:text-premium-accent transition-colors duration-300"
-              whileHover={{ scale: 1.1, y: -2 }}
+              className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-orange-400 dark:hover:text-premium-accent transition-colors duration-300"
+              whileHover={{ scale: 1.05, y: -2 }}
             >
-              <Linkedin className="w-7 h-7" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+              <span>Instagram</span>
             </motion.a>
             <motion.a 
-              href="mailto:your.email@example.com" 
-              className="text-gray-400 hover:text-premium-accent transition-colors duration-300"
-              whileHover={{ scale: 1.1, y: -2 }}
+              href="https://www.linkedin.com/in/kartikay-dubey-98ba73313/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-orange-400 dark:hover:text-premium-accent transition-colors duration-300"
+              whileHover={{ scale: 1.05, y: -2 }}
             >
-              <Mail className="w-7 h-7" />
+              <Linkedin className="w-5 h-5" /> <span>LinkedIn</span>
+            </motion.a>
+            <motion.a 
+              href="mailto:kartikaydubey5074@gmail.com" 
+              className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-orange-400 dark:hover:text-premium-accent transition-colors duration-300"
+              whileHover={{ scale: 1.05, y: -2 }}
+            >
+              <Mail className="w-5 h-5" /> <span>Email</span>
             </motion.a>
           </div>
           <p className="text-gray-500 dark:text-gray-400 text-center text-sm font-light mt-6">

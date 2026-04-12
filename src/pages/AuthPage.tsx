@@ -6,9 +6,12 @@ import { motion } from "framer-motion";
 import { easeInOut } from "framer-motion";
 import { Rocket, User, Github, Linkedin, Mail } from "lucide-react";
 
+import { useStore } from "../stores/useStore";
 
-
-const AuthPage: React.FC = () => (
+const AuthPage: React.FC = () => {
+  const isDarkMode = useStore((state) => state.isDarkMode);
+  
+  return (
   <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] dark:bg-premium-primary relative overflow-hidden transition-colors duration-300">
     {/* Minimal Background accents */}
     <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-teal-500/10 via-transparent to-transparent opacity-50 dark:opacity-20 pointer-events-none" />
@@ -43,7 +46,7 @@ const AuthPage: React.FC = () => (
           }
         }}
         providers={["google", "github", "linkedin"]}
-        theme="dark"
+        theme={isDarkMode ? "dark" : "default"}
         onlyThirdPartyProviders={false}
         socialLayout="horizontal"
         magicLink={true}
@@ -56,6 +59,7 @@ const AuthPage: React.FC = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default AuthPage;

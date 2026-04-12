@@ -48,7 +48,7 @@ const DashboardPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "timeline">("grid");
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("week");
   const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
   
@@ -239,13 +239,13 @@ const DashboardPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-3">
               <motion.button
-                onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+                onClick={() => setViewMode(viewMode === "grid" ? "timeline" : "grid")}
                 className="p-2 rounded-lg bg-white dark:bg-premium-card shadow-sm hover:shadow-md transition-all duration-200 border border-transparent dark:border-premium-border"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Toggle View"
               >
-                {viewMode === "grid" ? <BarChart3 className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
+                {viewMode === "grid" ? <Activity className="w-5 h-5 text-premium-accent" /> : <BarChart3 className="w-5 h-5 text-premium-accent" />}
               </motion.button>
               <motion.button
                 onClick={() => setIsCreateModalOpen(true)}
@@ -474,27 +474,33 @@ const DashboardPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Goals Grid/List */}
+        {/* Goals Grid/Timeline */}
         <motion.div 
           className={viewMode === "grid" 
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            : "space-y-4"
+            : "relative max-w-4xl mx-auto py-8"
           }
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
+          {viewMode === "timeline" && filteredGoals.length > 0 && (
+            <div className="absolute left-[2.25rem] md:left-[50%] top-16 bottom-16 w-0.5 bg-gradient-to-b from-orange-500 via-amber-400 to-orange-500 opacity-20 transform -translate-x-1/2 rounded-full hidden sm:block" />
+          )}
+          
           <AnimatePresence>
             {filteredGoals.map((goal, index) => (
               <motion.div 
                 key={goal.id} 
-                className={`bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 border border-gray-100 dark:border-slate-700 p-6 cursor-pointer hover:shadow-xl transition-all duration-300 ${
-                  viewMode === "list" ? "flex items-center space-x-4" : ""
-                }`}
+                className={
+                  viewMode === "timeline" 
+                    ? `relative flex flex-col md:flex-row items-center justify-center md:justify-between w-full mb-12 sm:px-4 group ${index % 2 === 0 ? "md:flex-row-reverse" : ""}`
+                    : "bg-white dark:bg-premium-card rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30 border border-gray-100 dark:border-slate-700 p-6 cursor-pointer hover:shadow-xl transition-all duration-300"
+                }
                 variants={cardVariants}
                 whileHover={{ 
                   scale: 1.02, 
-                  rotateY: 5,
+                  rotateY: viewMode === "grid" ? 5 : 0,
                   boxShadow: "0 20px 40px rgba(0,0,0,0.1)"
                 }}
                 whileTap={{ scale: 0.98 }}
@@ -505,111 +511,140 @@ const DashboardPage: React.FC = () => {
                 }}
                 layout
               >
-                <div className={`flex ${viewMode === "list" ? "items-center flex-1" : "justify-between items-start mb-4"}`}>
-                  <div className={`${viewMode === "list" ? "flex-1" : ""}`}>
-                    <h3 className={`font-semibold text-gray-900 dark:text-white ${viewMode === "list" ? "text-lg" : "text-lg mb-2"}`}>
-                      {goal.title}
-                    </h3>
-                    {viewMode === "list" && (
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{goal.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(goal.status)}`}>
-                      {goal.status}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteGoal(goal.id);
-                      }}
-                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
-                </div>
-                
-                {viewMode === "grid" && (
+                {/* Timeline node */}
+                {viewMode === "timeline" && (
                   <>
+                    {/* Timestamp label */}
+                    <div className={`hidden md:block w-5/12 text-sm text-gray-500 dark:text-gray-400 font-medium ${index % 2 === 0 ? "text-left pl-8" : "text-right pr-8"}`}>
+                      {new Date(goal.createdAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </div>
+                    {/* Circle Node */}
+                    <div className="hidden sm:flex absolute left-[2.25rem] md:left-1/2 transform -translate-x-1/2 w-10 h-10 rounded-full border-4 border-white dark:border-premium-primary shadow-lg items-center justify-center z-10 bg-white dark:bg-premium-primary group-hover:scale-110 transition-transform duration-300">
+                      {goal.status === 'Completed' ? <CheckCircle className="w-5 h-5 text-green-500" /> :
+                       goal.status === 'In Progress' ? <Clock className="w-5 h-5 text-orange-500" /> :
+                       <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />}
+                    </div>
+                  </>
+                )}
+
+                {/* Content Box */}
+                <div className={
+                  viewMode === "timeline"
+                    ? "w-full pl-16 sm:pl-20 md:pl-0 md:w-5/12 bg-white/5 backdrop-blur border border-white/10 dark:border-slate-700/50 rounded-xl p-6 shadow-xl hover:shadow-orange-500/10 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-premium-card dark:to-premium-secondary"
+                    : "flex flex-col h-full"
+                }>
+                  <div className={`flex justify-between items-start mb-4`}>
+                    <div>
+                      <h3 className={`font-semibold text-gray-900 dark:text-white text-lg mb-2`}>
+                        {goal.title}
+                      </h3>
+                      {viewMode === "timeline" && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{goal.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteGoal(goal.id);
+                        }}
+                        className="p-1 hover:bg-red-100 dark:hover:bg-red-900/40 rounded transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Category formatting rule */}
+                  {goal.category && goal.category !== "Syllabus (Auto-Generated)" && viewMode === "grid" && (
                     <div className="mb-3">
                       <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{goal.category}</span>
                     </div>
-                    
-                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 mb-3 overflow-hidden">
-                      <motion.div 
-                        className={`h-3 rounded-full ${
-                          goal.status === "Completed" 
-                            ? "bg-premium-accent" 
-                            : "bg-premium-highlight"
-                        }`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${goal.progress}%` }}
-                        transition={{ duration: 1, delay: index * 0.1 }}
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between items-center mb-3">
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{goal.progress}% complete</p>
+                  )}
+                  
+                  {/* Elegant Gradient Progress Bar */}
+                  <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2 mb-3 overflow-hidden">
+                    <motion.div 
+                      className={`h-2 rounded-full ${
+                        goal.status === "Completed" 
+                          ? "bg-green-500" 
+                          : "bg-gradient-to-r from-orange-500 to-amber-400"
+                      }`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${goal.progress}%` }}
+                      transition={{ duration: 1, delay: index * 0.1 }}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{goal.progress}%</p>
+                    <div className="flex space-x-2 items-center">
+                      {/* Difficulty Glow Badge */}
+                      {goal.notes && goal.notes.includes("Difficulty:") && viewMode === "timeline" && (
+                        <span className="bg-orange-500/20 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-semibold shadow-[0_0_10px_rgba(249,115,22,0.1)]">
+                          {goal.notes.split('|')[0].replace('Difficulty:', '').trim()}
+                        </span>
+                      )}
                       <select
                         value={goal.status}
                         onChange={(e) => handleStatusChange(goal.id, e.target.value as any)}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xs border border-gray-300 dark:border-slate-600 rounded px-2 py-1 focus:ring-2 focus:ring-premium-accent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white"
+                        className="text-xs font-medium border border-gray-300 dark:border-slate-600 rounded-full px-3 py-1 focus:ring-2 focus:ring-orange-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white cursor-pointer"
                       >
                         <option value="To Do">To Do</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Completed">Completed</option>
                       </select>
                     </div>
-                  </>
-                )}
+                  </div>
 
-                {selectedGoal === goal.id && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700"
-                  >
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{goal.description}</p>
-                    
-                    {goal.subTasks.length > 0 && (
-                      <div className="mb-3">
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Sub Tasks:</h4>
-                        <div className="space-y-1">
-                          {goal.subTasks.map((task) => (
-                            <div key={task.id} className="flex items-center space-x-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleSubTask(goal.id, task.id);
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                {task.completed ? (
-                                  <CheckCircle className="w-4 h-4" />
-                                ) : (
-                                  <Circle className="w-4 h-4" />
-                                )}
-                              </button>
-                              <span className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                                {task.title}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                      <span>Created: {new Date(goal.createdAt).toLocaleDateString()}</span>
-                      {goal.targetDate && (
-                        <span>Target: {new Date(goal.targetDate).toLocaleDateString()}</span>
+                  {selectedGoal === goal.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/50"
+                    >
+                      {viewMode === "grid" && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{goal.description}</p>
                       )}
-                    </div>
-                  </motion.div>
-                )}
+                      
+                      {goal.notes && (
+                        <div className="mb-4 text-xs bg-orange-50 dark:bg-orange-500/5 p-3 rounded-xl text-orange-900 dark:text-orange-200 border border-orange-100 dark:border-orange-500/10 whitespace-pre-line">
+                          {goal.notes}
+                        </div>
+                      )}
+
+                      {goal.subTasks.length > 0 && (
+                        <div className="mb-3">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Milestones</h4>
+                          <div className="space-y-2">
+                            {goal.subTasks.map((task) => (
+                              <div key={task.id} className="flex items-center space-x-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSubTask(goal.id, task.id);
+                                  }}
+                                  className={`transition-colors ${task.completed ? 'text-green-500 hover:text-green-600' : 'text-gray-400 hover:text-orange-500'}`}
+                                >
+                                  {task.completed ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                                </button>
+                                <span className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                  {task.title}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-4">
+                        <span className="font-medium">Added: {new Date(goal.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>
