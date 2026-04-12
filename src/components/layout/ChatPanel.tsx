@@ -64,7 +64,7 @@ const ChatPanel: React.FC = () => {
 
       setMessages(prev => [...prev, { role: "assistant", content: assistantMsg }]);
     } catch (err: any) {
-      console.error(err);
+      console.error("API ERROR:", err.response?.data || err.message || err);
       setMessages(prev => [...prev, { role: "assistant", content: err.message || "Sorry, I am having trouble connecting to the server. Please try again later." }]);
     } finally {
       setIsLoading(false);

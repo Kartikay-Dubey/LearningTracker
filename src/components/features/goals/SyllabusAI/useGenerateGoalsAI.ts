@@ -60,6 +60,7 @@ export function useGenerateGoalsAI() {
       setLoading(false);
       return goals;
     } catch (err: any) {
+      console.error("API ERROR:", err.response?.data || err.message || err);
       setError(err.message || "Failed to generate goals.");
       setLoading(false);
       return null;
