@@ -51,12 +51,6 @@ const AuthPage: React.FC = () => {
         socialLayout="horizontal"
         magicLink={true}
       />
-      <div className="flex justify-center gap-4 mt-6">
-        <span className="text-gray-400">or sign in with</span>
-        <Github className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-        <Linkedin className="w-6 h-6 text-blue-700 dark:text-blue-400" />
-        <Mail className="w-6 h-6 text-red-500 dark:text-red-400" />
-      </div>
     </div>
   </div>
   );
