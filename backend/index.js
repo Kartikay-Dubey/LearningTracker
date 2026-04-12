@@ -5,14 +5,20 @@ require("dotenv").config();
 const { OpenAI } = require("openai");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173", 
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  credentials: true
+}));
 app.use(express.json());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
-    "HTTP-Referer": "http://localhost:5173",
+    "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:5173",
     "X-Title": "Learning Tracker",
   }
 });
@@ -58,7 +64,8 @@ Each object MUST have the following structure:
     console.log("OpenAI API response received successfully.");
 
     // Silently route the syllabus to the ML service context buffer
-    fetch("http://127.0.0.1:8000/store", {
+    const ML_URL = process.env.ML_API_URL || "http://127.0.0.1:8000";
+    fetch(`${ML_URL}/store`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ document_text: syllabusText })
@@ -86,7 +93,8 @@ app.post("/api/chat", async (req, res) => {
     // 1. Semantic Search local Context via ML Service
     let context = "";
     try {
-      const mlResponse = await fetch("http://127.0.0.1:8000/query", {
+      const ML_URL = process.env.ML_API_URL || "http://127.0.0.1:8000";
+      const mlResponse = await fetch(`${ML_URL}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, n_results: 3 })
