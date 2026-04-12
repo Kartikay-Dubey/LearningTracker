@@ -19,6 +19,10 @@ const openai = new OpenAI({
   }
 });
 
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
+
 app.post("/api/generate-goals", async (req, res) => {
   const { syllabusText } = req.body;
   if (!syllabusText) return res.status(400).json({ error: "Missing syllabusText" });
@@ -141,4 +145,5 @@ app.post("/api/chat", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
+console.log("Starting backend from:", __dirname);
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
