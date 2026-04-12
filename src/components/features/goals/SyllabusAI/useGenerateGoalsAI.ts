@@ -17,7 +17,8 @@ export function useGenerateGoalsAI() {
     setLoading(true);
     setError(null);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const RAW_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const API_URL = RAW_URL.replace(/\/+$/, "");
       const response = await fetch(`${API_URL}/api/generate-goals`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

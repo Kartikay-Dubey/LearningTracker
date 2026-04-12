@@ -40,7 +40,8 @@ const ChatPanel: React.FC = () => {
       // Structure history for completion
       const history = messages.map(m => ({ role: m.role, content: m.content }));
       
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const RAW_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const API_URL = RAW_URL.replace(/\/+$/, "");
       const res = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
