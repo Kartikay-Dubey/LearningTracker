@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import faiss
+import threading
 
 # ------------------ CONFIG ------------------
 
@@ -22,19 +23,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ------------------ LAZY MODEL LOAD ------------------
+# ------------------ GLOBALS ------------------
 
 embedder = None
+model_loading = False
+
+# ------------------ MODEL LOADER ------------------
+
+def load_model_background():
+    global embedder, model_loading
+    if embedder is None and not model_loading:
+        model_loading = True
+        logger.info("🔄 Loading model in background...")
+        embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        logger.info("✅ Model loaded successfully")
 
 def get_model():
     global embedder
+
     if embedder is None:
-        logger.info("🔄 Loading embedding model...")
-        embedder = SentenceTransformer('all-MiniLM-L6-v2')
-        logger.info("✅ Model loaded.")
+        # Trigger background loading
+        threading.Thread(target=load_model_background).start()
+        raise HTTPException(status_code=503, detail="Model is loading, try again in a few seconds")
+
     return embedder
 
-# ------------------ FAISS SETUP ------------------
+# ------------------ FAISS ------------------
 
 EMBEDDING_DIM = 384
 index = faiss.IndexFlatL2(EMBEDDING_DIM)
@@ -64,21 +78,20 @@ def health_check():
 @app.post("/store")
 async def store_document(request: StoreRequest):
     try:
+        model = get_model()
+
         raw_text = request.document_text.strip()
 
         if not raw_text:
             raise HTTPException(status_code=400, detail="Empty document")
 
-        # Chunking
         chunks = [c.strip() for c in raw_text.split('\n\n') if len(c.strip()) > 20]
 
         if not chunks:
             chunks = [c.strip() for c in raw_text.split('.') if len(c.strip()) > 20]
 
         if not chunks:
-            return {"status": "skipped", "message": "No valid chunks"}
-
-        model = get_model()
+            return {"status": "skipped"}
 
         embeddings = model.encode(chunks)
         embeddings = np.array(embeddings).astype("float32")
@@ -90,12 +103,11 @@ async def store_document(request: StoreRequest):
 
         return {
             "status": "success",
-            "chunks_stored": len(chunks),
-            "total_chunks": index.ntotal
+            "chunks": len(chunks)
         }
 
     except Exception as e:
-        logger.error(f"Store Error: {e}")
+        logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 # ------------------ QUERY ------------------
@@ -103,10 +115,10 @@ async def store_document(request: StoreRequest):
 @app.post("/query")
 async def query_context(request: QueryRequest):
     try:
+        model = get_model()
+
         if index.ntotal == 0:
             return {"context": ""}
-
-        model = get_model()
 
         query_emb = model.encode([request.query])
         query_emb = np.array(query_emb).astype("float32")
@@ -117,10 +129,8 @@ async def query_context(request: QueryRequest):
 
         results = [documents[i] for i in I[0] if i < len(documents)]
 
-        return {
-            "context": "\n\n".join(results)
-        }
+        return {"context": "\n\n".join(results)}
 
     except Exception as e:
-        logger.error(f"Query Error: {e}")
+        logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
