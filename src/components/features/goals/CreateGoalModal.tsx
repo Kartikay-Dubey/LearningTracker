@@ -54,7 +54,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
       category: formData.category,
       difficulty: 'Medium' as const,
       progress: 0,
-      status: 'To Do' as const,
+      status: 'todo' as const,
       timeSpent: '0 hours',
       targetDate: formData.targetDate,
       deadline: formData.targetDate || '',

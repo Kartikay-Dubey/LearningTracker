@@ -205,8 +205,8 @@ const ProfilePage: React.FC = () => {
 
   const stats = {
     totalGoals: goals.length,
-    completedGoals: goals.filter(g => g.status === 'Completed').length,
-    inProgressGoals: goals.filter(g => g.status === 'In Progress').length,
+    completedGoals: goals.filter(g => g.status === 'completed').length,
+    inProgressGoals: goals.filter(g => g.status === 'in_progress').length,
     averageProgress: goals.length > 0 
       ? Math.round(goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length)
       : 0

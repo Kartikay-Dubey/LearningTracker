@@ -36,7 +36,7 @@ import {
   CloudOff
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
-import { useStore } from '../stores/useStore';
+import { useStore, GoalStatus } from '../stores/useStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Pie, BarChart, Bar } from "recharts";
 import toast from "react-hot-toast";
 import CreateGoalModal from "../components/features/goals/CreateGoalModal";
@@ -106,7 +106,7 @@ const DashboardPage: React.FC = () => {
       }).length;
 
       const dayGoalsCompleted = goals.filter(g => {
-        if (g.status !== 'Completed' || !g.completedAt) return false;
+        if (g.status !== 'completed' || !g.completedAt) return false;
         const t = new Date(g.completedAt).getTime();
         return t >= d.getTime() && t < nextD.getTime();
       }).length;
@@ -123,9 +123,9 @@ const DashboardPage: React.FC = () => {
   }, [goals]);
 
   const pieData = useMemo(() => [
-    { name: "Completed", value: goals.filter(g => g.status === "Completed").length, color: "#10b981" },
-    { name: "In Progress", value: goals.filter(g => g.status === "In Progress").length, color: "#3b82f6" },
-    { name: "To Do", value: goals.filter(g => g.status === "To Do").length, color: "#6b7280" },
+    { name: "Completed", value: goals.filter(g => g.status === "completed").length, color: "#10b981" },
+    { name: "In Progress", value: goals.filter(g => g.status === "in_progress").length, color: "#3b82f6" },
+    { name: "To Do", value: goals.filter(g => g.status === "todo").length, color: "#6b7280" },
   ], [goals]);
 
   // Filter and sort goals
@@ -153,23 +153,21 @@ const DashboardPage: React.FC = () => {
       return sortOrder === "asc" ? comparison : -comparison;
     }), [goals, searchTerm, filterStatus, sortBy, sortOrder]);
 
-  const handleStatusChange = (goalId: string, newStatus: 'To Do' | 'In Progress' | 'Completed' | 'Overdue') => {
+  const handleStatusChange = (goalId: string, newStatus: GoalStatus) => {
     const goal = goals.find(g => g.id === goalId);
     if (!goal) return;
 
-    if (goal.status === 'Overdue' || goal.status === 'Completed') {
+    if (goal.status === 'overdue' || goal.status === 'completed') {
       toast.error('This goal is permanently locked.');
       return;
     }
-    if (goal.status === 'In Progress' && newStatus === 'To Do') {
+    if (goal.status === 'in_progress' && newStatus === 'todo') {
       toast.error('Cannot regress an active goal.');
       return;
     }
-    if (newStatus === 'Completed') {
-      if (goal.status !== 'Completed') {
-        toast.error('Complete the quiz to finish this goal!');
-        return;
-      }
+    if (newStatus === 'completed') {
+      toast.error('Complete the quiz to finish this goal!');
+      return;
     }
 
     updateGoal(goalId, { status: newStatus as any });
@@ -178,12 +176,12 @@ const DashboardPage: React.FC = () => {
 
   // Helper: check if a goal is overdue
   const isOverdue = (goal: typeof goals[0]): boolean => {
-    if (goal.status === 'Completed' || !goal.deadline) return false;
+    if (goal.status === 'completed' || !goal.deadline) return false;
     return new Date(goal.deadline) < new Date();
   };
 
   const calculateTimeProgress = (goal: typeof goals[0]): number => {
-    if (goal.status === 'Completed') return 100;
+    if (goal.status === 'completed') return 100;
     if (!goal.deadline) return 0; // If no deadline, we have no time-based metric
 
     const start = new Date(goal.createdAt).getTime();
@@ -206,7 +204,7 @@ const DashboardPage: React.FC = () => {
   };
 
   const getTimeRemainingText = (goal: typeof goals[0]) => {
-    if (goal.status === 'Completed') return { text: "Completed", color: "text-green-500" };
+    if (goal.status === 'completed') return { text: "Completed", color: "text-green-500" };
     if (!goal.deadline) return { text: "No deadline", color: "text-gray-500 font-medium" };
 
     const end = new Date(goal.deadline).getTime();
@@ -279,8 +277,8 @@ const DashboardPage: React.FC = () => {
 
   // Real stat calculations (no hardcoded percentages)
   const stats = useMemo(() => {
-    const completedCount = goals.filter(g => g.status === 'Completed').length;
-    const inProgressCount = goals.filter(g => g.status === 'In Progress').length;
+    const completedCount = goals.filter(g => g.status === 'completed').length;
+    const inProgressCount = goals.filter(g => g.status === 'in_progress').length;
     const successRate = goals.length > 0 ? Math.round((completedCount / goals.length) * 100) : 0;
     const overdueCount = goals.filter(g => isOverdue(g)).length;
 
@@ -430,8 +428,8 @@ const DashboardPage: React.FC = () => {
                 className="px-4 py-3 border border-gray-200 dark:border-premium-border rounded-xl focus:ring-2 focus:ring-premium-accent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all duration-300"
               >
                 <option value="all">All Status</option>
-                <option value="To Do">To Do</option>
-                <option value="In Progress">In Progress</option>
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
                 <option value="Completed">Completed</option>
               </select>
               <select
@@ -633,8 +631,8 @@ const DashboardPage: React.FC = () => {
                     </div>
                     {/* Circle Node */}
                     <div className="hidden sm:flex absolute left-[2.25rem] md:left-1/2 transform -translate-x-1/2 w-10 h-10 rounded-full border-4 border-white dark:border-premium-primary shadow-lg items-center justify-center z-10 bg-white dark:bg-premium-primary group-hover:scale-110 transition-transform duration-300">
-                      {goal.status === 'Completed' ? <CheckCircle className="w-5 h-5 text-green-500" /> :
-                       goal.status === 'In Progress' ? <Clock className="w-5 h-5 text-orange-500" /> :
+                      {goal.status === 'completed' ? <CheckCircle className="w-5 h-5 text-green-500" /> :
+                       goal.status === 'in_progress' ? <Clock className="w-5 h-5 text-orange-500" /> :
                        <Circle className="w-5 h-5 text-gray-300 dark:text-gray-600" />}
                     </div>
                   </>
@@ -682,7 +680,7 @@ const DashboardPage: React.FC = () => {
                         {(goal as any).difficulty}
                       </span>
                     )}
-                    {goal.status === 'Overdue' && (
+                    {goal.status === 'overdue' && (
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" /> Overdue
                       </span>
@@ -693,7 +691,7 @@ const DashboardPage: React.FC = () => {
                   <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2 mb-3 overflow-hidden">
                     <motion.div 
                       className={`h-2 rounded-full ${
-                        goal.status === "Completed" 
+                        goal.status === "completed" 
                           ? "bg-green-500" 
                           : calculateTimeProgress(goal) > 90 
                             ? "bg-red-500" 
@@ -713,7 +711,7 @@ const DashboardPage: React.FC = () => {
                     </p>
                     <div className="flex space-x-2 items-center">
                       {/* Take Quiz button for In Progress goals */}
-                      {goal.status === 'In Progress' && (
+                      {goal.status === 'in_progress' && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -725,11 +723,11 @@ const DashboardPage: React.FC = () => {
                         </button>
                       )}
                       {/* Status dropdown — locked for completed/overdue goals, no Completed option */}
-                      {goal.status === 'Completed' ? (
+                      {goal.status === 'completed' ? (
                         <span className="text-xs font-medium px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 flex items-center gap-1">
                           <Lock className="w-3 h-3" /> Completed
                         </span>
-                      ) : goal.status === 'Overdue' ? (
+                      ) : goal.status === 'overdue' ? (
                         <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 flex items-center gap-1">
                           <Lock className="w-3 h-3" /> Overdue
                         </span>
@@ -740,8 +738,8 @@ const DashboardPage: React.FC = () => {
                           onClick={(e) => e.stopPropagation()}
                           className="text-xs font-medium border border-gray-300 dark:border-slate-600 rounded-full px-3 py-1 focus:ring-2 focus:ring-orange-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white cursor-pointer"
                         >
-                          <option value="To Do">To Do</option>
-                          <option value="In Progress">In Progress</option>
+                          <option value="todo">To Do</option>
+                          <option value="in_progress">In Progress</option>
                         </select>
                       )}
                     </div>

@@ -14,6 +14,9 @@ import {
 // Types
 // ──────────────────────────────────────────────
 
+export type GoalStatus = 'todo' | 'in_progress' | 'completed' | 'overdue';
+export type NotificationType = 'error' | 'success' | 'warning' | 'info';
+
 export interface Goal {
   id: string;
   title: string;
@@ -21,7 +24,7 @@ export interface Goal {
   category: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   progress: number;
-  status: 'To Do' | 'In Progress' | 'Completed';
+  status: GoalStatus;
   timeSpent: string;
   targetDate: string;
   deadline: string;       // ISO date string — overdue if past this
@@ -66,7 +69,7 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'warning' | 'error' | 'success' | 'info';
+  type: NotificationType;
   read: boolean;
   createdAt: string;
 }
@@ -337,13 +340,13 @@ export const useStore = create<AppState>()(
         if (!prevGoal) return;
 
         // ── STATE LOCK: once Completed, NO reverting ──
-        if (prevGoal.status === 'Completed' && updates.status && updates.status !== 'Completed') {
+        if (prevGoal.status === 'completed' && updates.status && updates.status !== 'completed') {
           console.warn(`[LearnTrack] Blocked: Cannot revert completed goal "${prevGoal.title}"`);
           return; // Silently reject
         }
 
         // ── Block direct completion via dropdown (must go through quiz) ──
-        if (updates.status === 'Completed' && prevGoal.status !== 'Completed') {
+        if (updates.status === 'completed' && prevGoal.status !== 'completed') {
           // Only completeGoalViaQuiz should set Completed — it calls updateGoal internally
           // If this is called from quiz flow, _quizCompleting flag will be set
           const isQuizFlow = (updates as any)._fromQuiz === true;
@@ -367,7 +370,7 @@ export const useStore = create<AppState>()(
         updateGoalInDB(id, cleanUpdates).catch(e => console.error('[DB] updateGoal sync failed:', e));
 
         // Award XP only on genuine first-time completion
-        if (updates.status === 'Completed' && prevGoal.status !== 'Completed') {
+        if (updates.status === 'completed' && prevGoal.status !== 'completed') {
           const xpAmount = getXPForDifficulty(prevGoal.difficulty || 'Medium');
           get().addXP(xpAmount);
           set((state) => ({
@@ -407,7 +410,7 @@ export const useStore = create<AppState>()(
 
         if (passed) {
           get().updateGoal(id, {
-            status: 'Completed',
+            status: 'completed',
             progress: 100,
             completedAt: new Date().toISOString(),
             _fromQuiz: true
@@ -430,7 +433,7 @@ export const useStore = create<AppState>()(
         set((state) => {
           const updatedGoals = state.goals.map(goal => {
             if (goal.id !== goalId) return goal;
-            if (goal.status === 'Completed') return goal;
+            if (goal.status === 'completed') return goal;
 
             const updatedSubTasks = goal.subTasks.map(task =>
               task.id === taskId ? { ...task, completed: !task.completed } : task
@@ -441,8 +444,8 @@ export const useStore = create<AppState>()(
             const newProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
             let newStatus = goal.status;
-            if (newProgress > 0 && goal.status === 'To Do') {
-              newStatus = 'In Progress';
+            if (newProgress > 0 && goal.status === 'todo') {
+              newStatus = 'in_progress';
             }
 
             const updated = { ...goal, subTasks: updatedSubTasks, progress: newProgress, status: newStatus };
@@ -473,7 +476,7 @@ export const useStore = create<AppState>()(
 
         const updatedGoals = state.goals.map(goal => {
           // Only check goals that are strictly active
-          if (goal.status === 'Completed' || goal.status === 'Overdue' || !goal.deadline) return goal;
+          if (goal.status === 'completed' || goal.status === 'overdue' || !goal.deadline) return goal;
 
           const deadlineDate = new Date(goal.deadline);
           if (isNaN(deadlineDate.getTime())) return goal;
@@ -490,7 +493,7 @@ export const useStore = create<AppState>()(
               createdAt: now.toISOString()
             });
             modified = true;
-            return { ...goal, status: 'Overdue' as any };
+            return { ...goal, status: 'overdue' as GoalStatus };
           }
           return goal;
         });
@@ -500,6 +503,7 @@ export const useStore = create<AppState>()(
             get().addXP(-xpPenalty);
           }
           set((s) => ({
+            ...s,
             goals: updatedGoals,
             notifications: [...newNotifications, ...s.notifications].slice(0, 50)
           }));
@@ -529,7 +533,7 @@ export const useStore = create<AppState>()(
         const state = get();
         if (state._xpRecalculated) return; // Only run once
 
-        const completedGoals = state.goals.filter(g => g.status === 'Completed');
+        const completedGoals = state.goals.filter(g => g.status === 'completed');
         let goalXP = 0;
         completedGoals.forEach(goal => {
           goalXP += getXPForDifficulty(goal.difficulty || 'Medium');
@@ -603,7 +607,7 @@ export const useStore = create<AppState>()(
         const { goals, userStats } = state;
         const newNotificationsFromAchieve: Notification[] = [];
 
-        const completedGoals = goals.filter(g => g.status === 'Completed');
+        const completedGoals = goals.filter(g => g.status === 'completed');
         const now = new Date();
 
         const updatedAchievements = state.achievements.map(achievement => {
@@ -682,6 +686,7 @@ export const useStore = create<AppState>()(
         if (!existing || existing.unlockedAt) return;
 
         set((state) => ({
+          ...state,
           achievements: state.achievements.map(achievement =>
             achievement.id === achievementId
               ? { ...achievement, unlockedAt: new Date().toISOString() }
@@ -696,7 +701,7 @@ export const useStore = create<AppState>()(
               id: `achieve-${achievementId}-${Date.now()}`,
               title: 'Achievement Unlocked! 🏆',
               message: `You unlocked: ${existing.title}`,
-              type: 'success',
+              type: 'success' as NotificationType,
               read: false,
               createdAt: new Date().toISOString()
             },
@@ -722,11 +727,11 @@ export const useStore = create<AppState>()(
       // ────────── UI ──────────
 
       toggleDarkMode: () => {
-        set((state) => {
-          const newMode = !state.isDarkMode;
-          localStorage.setItem('theme', newMode ? 'dark' : 'light');
-          return { isDarkMode: newMode };
-        });
+        set((state) => ({
+          ...state,
+          isDarkMode: !state.isDarkMode
+        }));
+        localStorage.setItem('theme', !get().isDarkMode ? 'dark' : 'light');
       },
 
       // ────────── NOTIFICATIONS ──────────
@@ -738,7 +743,7 @@ export const useStore = create<AppState>()(
         
         // Check deadlines
         goals.forEach(goal => {
-          if (goal.status === 'Completed' || !goal.deadline) return;
+          if (goal.status === 'completed' || !goal.deadline) return;
           const deadline = new Date(goal.deadline);
           const diffHours = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
           
@@ -747,7 +752,7 @@ export const useStore = create<AppState>()(
               id: `overdue-${goal.id}`,
               title: 'Goal Overdue',
               message: `Your goal "${goal.title}" is overdue!`,
-              type: 'error',
+              type: 'error' as NotificationType,
               read: false,
               createdAt: now.toISOString()
             });
@@ -756,7 +761,7 @@ export const useStore = create<AppState>()(
               id: `deadline-${goal.id}`,
               title: 'Deadline Approaching',
               message: `"${goal.title}" is due in less than 48 hours.`,
-              type: 'warning',
+              type: 'warning' as NotificationType,
               read: false,
               createdAt: now.toISOString()
             });
@@ -771,7 +776,7 @@ export const useStore = create<AppState>()(
             id: `streak-warning-${lastActivity.toISOString()}`,
             title: 'Streak at Risk!',
             message: 'Complete a goal today to keep your streak alive!',
-            type: 'warning',
+            type: 'warning' as NotificationType,
             read: false,
             createdAt: now.toISOString()
           });
@@ -783,7 +788,7 @@ export const useStore = create<AppState>()(
             const currentIds = new Set(state.notifications.map(n => n.id));
             const uniqueNew = newNotifications.filter(n => !currentIds.has(n.id));
             if (uniqueNew.length > 0) {
-              return { notifications: [...uniqueNew, ...state.notifications].slice(0, 50) };
+              return { ...state, notifications: [...uniqueNew, ...state.notifications].slice(0, 50) };
             }
             return state;
           });
@@ -792,6 +797,7 @@ export const useStore = create<AppState>()(
 
       markNotificationRead: (id) => {
         set((state) => ({
+          ...state,
           notifications: state.notifications.map(n => 
             n.id === id ? { ...n, read: true } : n
           )
