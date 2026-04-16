@@ -225,7 +225,7 @@ export const useStore = create<AppState>()(
       addGoal: (goalData) => {
         const newGoal: Goal = {
           ...goalData,
-          id: Date.now().toString(),
+          id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 9),
           createdAt: new Date().toISOString()
         };
         set((state) => ({
@@ -235,14 +235,18 @@ export const useStore = create<AppState>()(
       },
 
       updateGoal: (id, updates) => {
+        // Capture previous status BEFORE mutating state to prevent duplicate XP
+        const prevGoal = get().goals.find(g => g.id === id);
+        const wasAlreadyCompleted = prevGoal?.status === 'Completed';
+
         set((state) => ({
           goals: state.goals.map(goal => 
             goal.id === id ? { ...goal, ...updates } : goal
           )
         }));
         
-        // Check if goal was completed
-        if (updates.status === 'Completed') {
+        // Only award XP on genuine transition TO Completed (not if already Completed)
+        if (updates.status === 'Completed' && !wasAlreadyCompleted) {
           get().addXP(100);
           get().updateStreak();
           get().checkAchievements();
