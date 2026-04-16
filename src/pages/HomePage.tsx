@@ -108,29 +108,29 @@ const steps = [
 
 const testimonials = [
   {
-    name: "Sarah Chen",
-    role: "Software Developer",
-    content: "LearnTrack helped me stay organized while learning React. The progress tracking kept me motivated!",
-    avatar: "SC"
-  },
-  {
-    name: "Marcus Johnson",
+    name: "Rahul Sharma",
     role: "Student",
-    content: "Perfect for managing my study goals. The analytics help me understand my learning patterns.",
-    avatar: "MJ"
+    content: "LearnTrack helped me stay organized while preparing for my semester exams. The AI quiz feature is a game-changer!",
+    avatar: "RS"
   },
   {
-    name: "Emma Rodriguez",
+    name: "Priya Verma",
+    role: "Developer",
+    content: "Perfect for managing my learning goals alongside work. The progress tracking keeps me accountable and motivated.",
+    avatar: "PV"
+  },
+  {
+    name: "Aman Gupta",
     role: "Designer",
-    content: "Love the clean interface and how easy it is to track my design learning projects.",
-    avatar: "ER"
+    content: "Love the clean interface and how easy it is to track my design learning. The streak system keeps me coming back daily.",
+    avatar: "AG"
   }
 ];
 
 const stats = [
-  { number: "10K+", label: "Active Learners", icon: <Users className="w-6 h-6" /> },
-  { number: "50K+", label: "Goals Completed", icon: <CheckCircle className="w-6 h-6" /> },
-  { number: "95%", label: "Success Rate", icon: <TrendingUp className="w-6 h-6" /> },
+  { number: "1.2K+", label: "Active Learners", icon: <Users className="w-6 h-6" /> },
+  { number: "8K+", label: "Goals Completed", icon: <CheckCircle className="w-6 h-6" /> },
+  { number: "87%", label: "Success Rate", icon: <TrendingUp className="w-6 h-6" /> },
   { number: "24/7", label: "Available", icon: <Globe className="w-6 h-6" /> }
 ];
 
@@ -152,7 +152,7 @@ const HomePage: React.FC = () => {
         >
           <div className="inline-flex items-center px-4 py-2 bg-teal-50 dark:bg-premium-secondary rounded-full text-premium-accent border border-premium-accent/20 dark:border-premium-border text-sm font-medium mb-4">
             <Star className="w-4 h-4 mr-2" />
-            Trusted by 10,000+ learners worldwide
+            Trusted by 1,200+ learners worldwide
           </div>
         </motion.div>
 

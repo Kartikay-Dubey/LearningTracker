@@ -1,293 +1,325 @@
-# LearnTrack — AI / ML / Chatbot System Documentation
+# LearnTrack — Complete System Documentation
 
-> Developer reference for the RAG pipeline, goal generation engine, XP system, and full data flow.
+> Developer reference for the RAG pipeline, goal lifecycle, XP system, quiz validation, and full data flow.
 
 ---
 
-## 1. System Architecture (High Level)
+## 1. System Architecture
 
 ```
-Frontend (React + Vite)
+Frontend (React + Vite + Zustand)
+    │
+    ├── Dashboard ──► Goals CRUD (Zustand localStorage)
+    │                    │
+    │                    ├── Status: To Do → In Progress → Quiz → Completed (LOCKED)
+    │                    └── Progress: auto-calculated from subtask completion
+    │
+    ├── Quiz Modal ──► POST /api/generate-quiz ──► Node Backend
+    │                                                 │
+    │                                                 ├── Query ML Service (FAISS context)
+    │                                                 └── Call OpenRouter (generate 5 MCQs)
     │
     ├── Chat Panel ──► POST /api/chat ──► Node Backend
     │                                        │
-    │                                        ├── 1. Query ML Service (FAISS)
-    │                                        │       POST http://127.0.0.1:8000/query
-    │                                        │       ← returns relevant context chunks
-    │                                        │
-    │                                        ├── 2. Build prompt (system + context + history)
-    │                                        │
-    │                                        └── 3. Call OpenRouter (Mistral 7B)
-    │                                                ← returns AI answer
-    │                                                → sanitize response
-    │                                                → return to frontend
+    │                                        ├── Query ML (FAISS)
+    │                                        ├── Build prompt + context
+    │                                        └── Call OpenRouter → sanitize → return
     │
     └── Syllabus Upload ──► POST /api/generate-goals ──► Node Backend
                                                             │
                                                             ├── Call OpenRouter (goal JSON)
-                                                            └── Fire-and-forget: POST /store
-                                                                  to ML service (index syllabus)
+                                                            └── Fire-and-forget: POST /store to ML
 ```
 
 ---
 
-## 2. ML Service (Python — FAISS)
+## 2. Dashboard Metrics (Explained)
 
-**Location:** `ml_service/main.py`
-**Framework:** FastAPI
-**Port:** 8000
+### Stat Cards
 
-### How FAISS Works
+| Metric | Formula | Source |
+|--------|---------|--------|
+| **Total Goals** | `goals.length` | Zustand store |
+| **In Progress** | `goals.filter(status === 'In Progress').length` | Zustand store |
+| **Completed** | `goals.filter(status === 'Completed').length` | Zustand store |
+| **Success Rate** | `Math.round((completed / total) × 100)` | Derived |
 
-FAISS (Facebook AI Similarity Search) is an in-memory vector database. It stores numerical representations (embeddings) of text chunks and lets you find the most similar chunks to a given query using L2 distance.
+### Stat Subtexts (Previously Hardcoded)
 
-**Key point:** FAISS is purely in-memory. All indexed data is lost on service restart. There is no disk persistence configured.
+The green percentage values (+12%, +5%, etc.) were **previously hardcoded** with no data behind them. They are now replaced with:
 
-### How Embeddings Are Created
-
-The service uses the `all-MiniLM-L6-v2` model from the `sentence-transformers` library.
-
-• Model output dimension: **384 floats** per chunk
-• Embeddings are L2-normalized before indexing (`faiss.normalize_L2`)
-• The model loads lazily in a background thread on first request
-
-### Endpoints
-
-#### `POST /store`
-
-Ingests a document into the FAISS index.
-
-**Request body:**
-```json
-{
-  "document_text": "Full text content of the PDF/syllabus...",
-  "metadata": {}
-}
-```
-
-**Processing steps:**
-1. Split text by double newlines (`\n\n`) into chunks (min 20 chars)
-2. Fallback: split by period if paragraph splitting yields nothing
-3. Encode all chunks → 384-dim vectors
-4. Normalize and add to FAISS index
-5. Store raw chunk text in a parallel `documents[]` array
-
-**Response:** `{ "status": "success", "chunks": 15 }`
-
-#### `POST /query`
-
-Retrieves the most relevant context chunks for a user question.
-
-**Request body:**
-```json
-{
-  "query": "What are the types of operating systems?",
-  "n_results": 3
-}
-```
-
-**Processing steps:**
-1. Encode the query → 384-dim vector
-2. Normalize the query vector
-3. Search FAISS index for top-N nearest neighbors
-4. Map index positions back to raw text in `documents[]`
-5. Join results with double newlines
-
-**Response:** `{ "context": "chunk1\n\nchunk2\n\nchunk3" }`
+| Stat | New Subtext | Logic |
+|------|-------------|-------|
+| Total Goals | `"8 total"` | Actual count |
+| In Progress | `"2 overdue"` or `"On track"` | Checks deadline vs current date |
+| Completed | `"4 done"` | Actual count |
+| Success Rate | `"50%"` | Same as value |
 
 ---
 
-## 3. Backend Flow (Node.js)
-
-**Location:** `backend/index.js`
-**Framework:** Express.js
-**Port:** 5001
-
-### OpenRouter Integration
-
-The backend uses the `openai` npm package pointed at OpenRouter's base URL:
+## 3. Goal Lifecycle (State Machine)
 
 ```
-baseURL: "https://openrouter.ai/api/v1"
-model:   "mistralai/mistral-7b-instruct-v0.1"
+    ┌──────────┐     ┌─────────────┐     ┌───────┐     ┌───────────┐
+    │  To Do   │────►│ In Progress │────►│ Quiz  │────►│ Completed │
+    └──────────┘     └─────────────┘     └───────┘     └───────────┘
+         │                 ▲                 │               🔒
+         │                 │    score < 80%  │          (LOCKED)
+         │                 └─────────────────┘
+         │
+         └── Auto-transitions to "In Progress" when first subtask is checked
 ```
 
-The API key is read from `OPENROUTER_API_KEY` in `backend/.env`.
+### Rules
 
-### Chatbot Flow (`POST /api/chat`)
+1. **To Do → In Progress**: Manual dropdown OR auto on first subtask check
+2. **In Progress → Completed**: ONLY via quiz (80% pass rate, 4/5 questions)
+3. **Completed → anything**: ❌ BLOCKED — `updateGoal()` silently rejects
+4. **Dropdown**: No "Completed" option — only "To Do" and "In Progress"
+5. **Completed goals**: Show locked badge with 🔒 icon instead of dropdown
 
-1. **Receive** user query + chat history from frontend
-2. **Semantic search** → call ML service `POST /query` with the user's question
-3. **Build prompt** → system prompt includes formatting rules + retrieved context
-4. **Call OpenRouter** → sends `[system, ...history, user]` messages array
-5. **Sanitize** → strip `##` headings, excessive `**`, normalize bullets
-6. **Return** clean response to frontend
+### Progress Bar (Dynamic)
 
-### Goal Generation Flow (`POST /api/generate-goals`)
+Progress is automatically recalculated when subtasks are toggled:
+```
+progress = Math.round((completedSubtasks / totalSubtasks) × 100)
+```
 
-1. **Receive** extracted syllabus text from frontend
-2. **Call OpenRouter** with a structured system prompt demanding raw JSON output
-3. **Parse** the AI response (expects `{ "goals": [...] }`)
-4. **Fire-and-forget** → silently POST the syllabus text to ML `/store` endpoint so future chatbot queries have context
-5. **Return** goals JSON to frontend
-
-### Response Sanitizer
-
-Applied only to chat responses (not goal generation). Rules:
-• `## Heading` → `**Heading**` (converts markdown headings to bold)
-• Triple+ asterisks → double asterisks
-• Empty bold markers `** **` → removed
-• Stray single `*` → bullet `•`
-• Dash bullets `- item` → `• item`
-• Excessive blank lines collapsed
+If a goal has no subtasks, progress stays at 0% until quiz completion sets it to 100%.
 
 ---
 
-## 4. Goal System
+## 4. XP System (Redesigned)
 
-### How Goals Are Generated
-
-1. User uploads a PDF via the Syllabus-to-Goals modal
-2. Frontend extracts text using `useExtractTextFromPDF` hook
-3. Text is sent to `POST /api/generate-goals`
-4. AI returns structured JSON with fields:
-   - `title` — module/topic name
-   - `description` — what to learn
-   - `difficulty` — Easy / Medium / Hard
-   - `estimated_time` — time estimate
-   - `prerequisites` — dependency list
-   - `resources` — links or book names
-5. Frontend parses JSON and calls `addGoal()` for each entry
-
-### How Difficulty Is Estimated
-
-Difficulty is determined entirely by the AI model based on the syllabus content. The prompt instructs: `"difficulty": "Easy" // or Medium, Hard`. The AI infers difficulty from the complexity of the topic description.
-
-### Goal IDs
-
-Each goal gets a unique ID: `Date.now() + random alphanumeric suffix`. This prevents collisions when bulk-creating goals from AI output in rapid succession.
-
----
-
-## 5. XP & Progression System
-
-**Location:** `src/stores/useStore.ts` (Zustand store with `persist` middleware)
-
-### XP Calculation
+### XP Award Table
 
 | Action | XP Awarded |
 |--------|-----------|
-| Complete a goal | +100 XP |
+| Complete an **Easy** goal | +50 |
+| Complete a **Medium** goal | +100 |
+| Complete a **Hard** goal | +150 |
 | Unlock an achievement | +achievement.xpReward |
 
 ### Level Formula
-
 ```
 level = Math.floor(totalXP / 1000) + 1
 ```
 
-Every 1000 XP = 1 level up.
+### XP Recalculation
 
-### Streak System
-
-Tracked via `lastActivityDate` in user stats:
-• **Same day** activity → streak unchanged
-• **Next day** activity → streak incremented by 1
-• **Gap > 1 day** → streak resets to 1
-
-`longestStreak` is always updated to `max(current, longest)`.
-
-### XP Guard (Duplicate Prevention)
-
-Before awarding XP on goal completion, the store checks:
+On dashboard mount, `recalculateXP()` runs once to fix corrupted localStorage:
 ```
-const wasAlreadyCompleted = prevGoal?.status === 'Completed';
-if (updates.status === 'Completed' && !wasAlreadyCompleted) {
-  addXP(100);  // Only fires on genuine transition
+correctXP = Σ(completed goals × difficultyXP) + Σ(unlocked achievements × achievementXP)
+```
+
+This overwrites any accumulated errors from the pre-fix era.
+
+### Duplicate Prevention (3 layers)
+
+1. **Frontend**: `updateGoal()` checks `prevGoal.status !== 'Completed'` before awarding XP
+2. **Frontend**: `unlockAchievement()` checks `!existing.unlockedAt` before awarding bonus XP
+3. **Database**: `goal_progress` table has `UNIQUE(goal_id)` constraint — double-completion raises exception
+
+---
+
+## 5. Quiz System
+
+### Flow
+
+1. User clicks **"Quiz"** button on an In Progress goal
+2. `QuizModal` opens and calls `POST /api/generate-quiz`
+3. Backend:
+   - Fetches ML context via `POST /query` with goal title (FAISS)
+   - If ML context empty, falls back to goal description
+   - Sends context to OpenRouter with MCQ generation prompt
+   - Returns `{ questions: [{ question, options, correct }] }`
+4. User answers 5 questions one at a time
+5. Score calculated: if ≥ 4/5 (80%) → `completeGoalViaQuiz()` is called
+6. Store marks goal as Completed, awards difficulty-based XP, updates streak and achievements
+
+### API: `POST /api/generate-quiz`
+
+**Request:**
+```json
+{
+  "goalTitle": "Operating System Components",
+  "goalDescription": "Learn about processes, memory management..."
 }
 ```
 
-This prevents double XP when:
-- Re-selecting "Completed" on an already-completed goal
-- React re-renders triggering duplicate state updates
+**Response:**
+```json
+{
+  "questions": [
+    {
+      "question": "What is a process in an operating system?",
+      "options": [
+        "A) A hardware component",
+        "B) An instance of a running program",
+        "C) A type of memory",
+        "D) A file system"
+      ],
+      "correct": "B"
+    }
+  ]
+}
+```
 
 ---
 
-## 6. Achievements System
+## 6. Achievement System
 
-### Achievement Types
+### Definitions
 
-| Category | Examples |
-|----------|---------|
-| milestone | First Steps (1 goal), Goal Getter (5), Goal Guru (25), Grandmaster (100) |
-| streak | Getting Started (3d), Week Warrior (7d), Monthly Master (30d), Century (100d) |
-| speed | Speed Demon (complete goal within 24h of creation) |
-| consistency | Perfect Week (1 goal/day for 7 days) |
-| special | Early Bird (before 8 AM), Night Owl (after 10 PM) |
-
-### Rarity Tiers
-
-`common` → `rare` → `epic` → `legendary`
+| ID | Title | Trigger | Max | XP |
+|----|-------|---------|-----|-----|
+| first-goal | First Steps | Complete 1 goal | 1 | 50 |
+| complete-5 | Goal Getter | Complete 5 goals | 5 | 200 |
+| complete-25 | Goal Guru | Complete 25 goals | 25 | 500 |
+| complete-100 | Goal Grandmaster | Complete 100 goals | 100 | 2000 |
+| streak-3 | Getting Started | 3-day streak | 3 | 100 |
+| streak-7 | Week Warrior | 7-day streak | 7 | 250 |
+| streak-30 | Monthly Master | 30-day streak | 30 | 1000 |
+| streak-100 | Century Champion | 100-day streak | 100 | 5000 |
+| speed-demon | Speed Demon | Complete within 24h | 1 | 300 |
+| early-bird | Early Bird | Complete before 8 AM | 1 | 150 |
+| night-owl | Night Owl | Complete after 10 PM | 1 | 150 |
+| perfect-week | Perfect Week | 7 consecutive daily completions | 7 | 750 |
 
 ### Unlock Logic
 
-`checkAchievements()` runs after every goal add/complete. It:
-1. Counts completed goals and current streak
-2. Updates `progress` on each achievement
-3. If `progress >= maxProgress` and not yet unlocked → calls `unlockAchievement()`
-4. `unlockAchievement()` sets `unlockedAt` timestamp and awards bonus XP
+1. `checkAchievements()` runs after every goal completion
+2. Scans all achievements, calculates current progress from state
+3. If `progress >= maxProgress` AND `!unlockedAt` → `unlockAchievement()`
+4. `unlockAchievement()` sets timestamp + awards bonus XP
+
+### Why XP Mismatch Happens
+
+The original XP system had no guards:
+- Changing a goal to "Completed" multiple times → +100 XP each time
+- Re-unlocking achievements → duplicate bonus XP
+- No recalculation mechanism
+
+Now fixed with:
+- Status transition guard (only first `→ Completed` awards XP)
+- Achievement unlock guard (`unlockedAt` check)
+- `recalculateXP()` on mount corrects any legacy corruption
 
 ---
 
-## 7. Frontend Data Flow
+## 7. ML Service (Python — FAISS)
 
+**Location:** `ml_service/main.py` | **Port:** 8000
+
+### Embeddings
+
+Model: `all-MiniLM-L6-v2` (384-dim, L2-normalized)
+
+### `POST /store`
+Ingests document text → splits into chunks → encodes → adds to FAISS index.
+
+### `POST /query`
+Encodes query → searches FAISS for top-N nearest neighbors → returns joined text.
+
+### Important Caveats
+- **In-memory only** — FAISS index is lost on restart
+- **No user isolation** — all users share one vector store
+- Model loads lazily in background thread on first request
+
+---
+
+## 8. Backend Flow (Node.js)
+
+**Location:** `backend/index.js` | **Port:** 5001
+
+### OpenRouter Config
 ```
-User types question in ChatPanel
-     │
-     ▼
-ChatPanel.handleSend()
-     │
-     ├── Appends user message to local state
-     ├── Sends POST /api/chat with { query, history }
-     │
-     ▼
-Backend processes (ML context → OpenRouter → sanitize)
-     │
-     ▼
-ChatPanel receives { choices: [{ message: { content } }] }
-     │
-     └── Appends assistant message to local state → renders in UI
+baseURL: "https://openrouter.ai/api/v1"
+model:   "mistralai/mistral-7b-instruct-v0.1"
+apiKey:  OPENROUTER_API_KEY (from .env)
 ```
 
-### State Management
+### Endpoints
 
-- **Cart/Goals/XP/Achievements:** Zustand store (`useStore`) with `persist` middleware (localStorage key: `learning-tracker-storage`)
-- **Chat messages:** Local React state inside `ChatPanel` component (not persisted)
-- **Auth:** Supabase client (`src/lib/supabaseClient.ts`)
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/generate-goals` | Parse syllabus → return goal JSON |
+| POST | `/api/chat` | RAG-powered doubt solver |
+| POST | `/api/generate-quiz` | Generate 5 MCQs for goal validation |
 
----
-
-## 8. Important Notes & Caveats
-
-**FAISS is in-memory only**
-All indexed document chunks are lost when the Python ML service restarts. There is no persistence layer. If you restart `ml_service`, users must re-upload their PDFs.
-
-**No user isolation**
-The FAISS index is global. All users share the same vector store. One user's uploaded syllabus will be searchable by another user's chatbot queries.
-
-**Chat history is session-only**
-Chat messages live in React component state. Refreshing the page or closing the chat panel clears all conversation history.
-
-**OpenRouter rate limits**
-The backend uses Mistral 7B via OpenRouter. Free-tier keys have rate limits. Monitor `429` responses in backend logs.
-
-**Environment variables required:**
-- `backend/.env` → `OPENROUTER_API_KEY`, `PORT`, `ML_API_URL`
-- Root `.env` or `.env.local` → `VITE_API_URL`
+### Response Sanitizer
+Applied only to `/api/chat` responses:
+- `## Heading` → `**Heading**`
+- Triple+ asterisks → double
+- Stray `*` → `•`
+- Dash bullets → `•`
+- Excessive blank lines collapsed
 
 ---
 
-## 9. Running the Full Stack Locally
+## 9. Database Schema (Supabase/PostgreSQL)
+
+### Tables
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Profile extending auth.users |
+| `goals` | Learning goals with status, difficulty, deadline |
+| `goal_progress` | Completion receipts (UNIQUE per goal — prevents double XP) |
+| `user_xp` | Aggregated XP, level, streak (1:1 with users) |
+| `achievements` | Achievement definitions (seeded once) |
+| `user_achievements` | Per-user progress (UNIQUE per user+achievement) |
+| `syllabus_imports` | PDF upload audit trail |
+| `quiz_attempts` | Every quiz taken (score, questions, pass/fail) |
+
+### Atomic Completion RPC: `complete_goal(goal_id, user_id)`
+
+Server-side function that atomically:
+1. Locks the goal row (FOR UPDATE)
+2. Checks not already completed
+3. Calculates difficulty-based XP
+4. Inserts completion receipt
+5. Updates XP + streak
+6. Updates all achievement progress
+7. Auto-unlocks maxed achievements + awards bonus XP
+8. Returns full updated state as JSONB
+
+Double-completion is impossible due to `UNIQUE(goal_id)` on `goal_progress`.
+
+---
+
+## 10. Difficulty & Time Estimation
+
+### How Difficulty Is Set
+- **AI-generated goals**: The OpenRouter prompt instructs `"difficulty": "Easy" // or Medium, Hard`. The AI infers difficulty from topic complexity.
+- **Manual goals**: Default to "Medium". User can customize later.
+
+### XP Mapping
+```
+Easy   → 50 XP
+Medium → 100 XP
+Hard   → 150 XP
+```
+
+### Estimated Time
+Set by the AI based on topic scope. Stored in goal notes as metadata string (e.g., "Estimated Time: 10 hours").
+
+---
+
+## 11. Deadline System
+
+### How It Works
+- Goals can have a `deadline` field (ISO date string)
+- On dashboard mount, `checkDeadlines()` runs
+- UI shows a red "⚠ Overdue" badge on non-completed goals past their deadline
+- The "In Progress" stat card shows count of overdue goals
+
+### No Auto-Fail
+Overdue goals are **not** automatically failed or penalized. The badge serves as a visual warning. Implementing streak penalties for missed deadlines is a future enhancement.
+
+---
+
+## 12. Running Locally
 
 ```bash
 # 1. ML Service (Python)
@@ -301,9 +333,21 @@ npm install
 node index.js          # runs on port 5001
 
 # 3. Frontend (Vite)
-cd ..                  # project root
+cd ..
 npm install
 npm run dev            # runs on port 5173
 ```
 
-All three services must be running simultaneously for full functionality.
+### Environment Variables
+- `backend/.env` → `OPENROUTER_API_KEY`, `PORT`, `ML_API_URL`
+- Root `.env` → `VITE_API_URL`, Supabase keys
+
+---
+
+## 13. Important Notes
+
+- **FAISS is ephemeral** — restart = data loss. Re-upload PDFs.
+- **No user isolation in ML** — shared vector store across all users.
+- **Chat history is session-only** — page refresh clears it.
+- **Zustand persist** — all goals/XP/achievements stored in `localStorage` key `learning-tracker-storage`.
+- **Supabase schema is deployed** but the app currently reads/writes from localStorage only. DB migration is a future phase.

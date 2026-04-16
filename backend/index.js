@@ -82,6 +82,8 @@ Each object MUST have the following structure:
   }
 });
 
+
+
 // --- Response Sanitizer (removes markdown artifacts from AI output) ---
 function sanitizeResponse(text) {
   if (!text) return text;
@@ -186,6 +188,102 @@ RULES (follow strictly):
   } catch (err) {
     console.error("API Error in /api/chat:", err.response?.data || err.message);
     res.status(500).json({ error: (err.response?.data ? JSON.stringify(err.response.data) : err.message) || "Failed to process chat response." });
+  }
+});
+
+// ─── Quiz Generation Endpoint ───
+app.post("/api/generate-quiz", async (req, res) => {
+  const { goalTitle, goalDescription } = req.body;
+  if (!goalTitle) return res.status(400).json({ error: "Missing goalTitle" });
+
+  try {
+    console.log(`Generating quiz for: ${goalTitle}`);
+
+    // 1. Try to get relevant context from ML service
+    let context = "";
+    try {
+      const ML_URL = process.env.ML_API_URL || "http://127.0.0.1:8000";
+      const mlResponse = await fetch(`${ML_URL}/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: goalTitle, n_results: 5 })
+      });
+      if (mlResponse.ok) {
+        const mlData = await mlResponse.json();
+        context = mlData.context || "";
+        console.log(`Quiz ML context: ${context.length} chars`);
+      }
+    } catch (mlErr) {
+      console.error("ML Service unavailable for quiz, using description only.");
+    }
+
+    // 2. Build source material for question generation
+    const sourceMaterial = context
+      ? `Topic: ${goalTitle}\nDescription: ${goalDescription || ""}\n\nStudy Material:\n${context}`
+      : `Topic: ${goalTitle}\nDescription: ${goalDescription || ""}`;
+
+    // 3. Generate quiz via OpenRouter
+    const response = await openai.chat.completions.create({
+      model: "mistralai/mistral-7b-instruct-v0.1",
+      messages: [
+        {
+          role: "system",
+          content: `You are a quiz generator for a learning platform. Generate exactly 5 multiple-choice questions based on the provided study material.
+
+You MUST return ONLY a valid JSON object. No markdown. No explanation. OUTPUT NOTHING EXCEPT RAW JSON.
+
+Format:
+{
+  "questions": [
+    {
+      "question": "What is...?",
+      "options": ["A) option1", "B) option2", "C) option3", "D) option4"],
+      "correct": "B"
+    }
+  ]
+}
+
+Rules:
+- Exactly 5 questions
+- 4 options each (A, B, C, D)
+- Questions must test understanding, not just recall
+- "correct" field must be the letter only (A, B, C, or D)
+- Questions must be relevant to the topic`
+        },
+        { role: "user", content: sourceMaterial }
+      ],
+      temperature: 0.4,
+      max_tokens: 1500,
+    });
+
+    const content = response?.choices?.[0]?.message?.content || "";
+    if (!content) throw new Error("Empty quiz response from AI");
+
+    // 4. Parse the JSON response
+    let parsed;
+    try {
+      // Try direct parse first
+      parsed = JSON.parse(content);
+    } catch (e) {
+      // Try to extract JSON from potential markdown wrapping
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("Failed to parse quiz JSON from AI response");
+      }
+    }
+
+    if (!parsed.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+      throw new Error("AI returned invalid quiz structure");
+    }
+
+    console.log(`Quiz generated: ${parsed.questions.length} questions`);
+    res.json(parsed);
+
+  } catch (err) {
+    console.error("API Error in /api/generate-quiz:", err.message);
+    res.status(500).json({ error: err.message || "Failed to generate quiz" });
   }
 });
 
