@@ -47,12 +47,14 @@ const SyllabusToGoalsModal: React.FC<SyllabusToGoalsModalProps> = ({ isOpen, onC
              title: goal.title,
              description: goal.description,
              category: "Syllabus (Auto-Generated)",
+             difficulty: (goal.difficulty as 'Easy' | 'Medium' | 'Hard') || 'Medium',
              progress: 0,
              status: "To Do",
              timeSpent: "0h",
              targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+             deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
              subTasks: [],
-             notes: `Difficulty: ${goal.difficulty} | Estimated Time: ${goal.estimated_time}\nPrerequisites: ${goal.prerequisites?.join(', ') || 'None'}`,
+             notes: `Estimated Time: ${goal.estimated_time}\nPrerequisites: ${goal.prerequisites?.join(', ') || 'None'}`,
              links: goal.resources || []
           });
         }

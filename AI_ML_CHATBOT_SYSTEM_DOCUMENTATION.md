@@ -1,148 +1,353 @@
-# LearnTrack AI & ML Chatbot System Architecture
+# LearnTrack — Complete System Documentation
 
-## 1. System Overview
-The LearnTrack application encompasses a fully functional context-aware Retrieval-Augmented Generation (RAG) system. This module solves two primary learning challenges:
-1. **Automated Goal Extraction**: It ingests comprehensive, highly-structured academic or professional Syllabus PDFs and intelligently parses them into structured learning modules.
-2. **Context-Aware Doubt Solving**: It integrates a unified Chatbot that is inherently "syllabus-aware," allowing users to instantly ask educational questions specifically constrained to their uploaded documents.
+> Developer reference for the RAG pipeline, goal lifecycle, XP system, quiz validation, and full data flow.
 
 ---
 
-## 2. Architecture & Data Flow
+## 1. System Architecture
 
-The architecture operates locally using an integrated pipeline spanning Python and Node.js.
-
-```text
-[ User Uploads Syllabus PDF ]
-          |
-          v
-[ React Frontend (pdfjs-dist + Tesseract.js) ] -> Extracts & cleans flat text
-          |
-          | (POST /api/generate-goals)
-          v
-[ Node.js Backend Framework ]
-          |
-          +--> [ ML Service Buffer (POST /store) ] -> (Python) Vectorizes & Caches to Faiss CPU index
-          |
-          v
-[ OpenAI GPT-4 API ] -> Forwards JSON instructions to LLM
-          |
-          v
-[ React Frontend ] -> Renders Smart Goals locally into Dashboard UI
-
-============================================================
-
-[ User Types Question in ChatPanel ]
-          |
-          | (POST /api/chat)
-          v
-[ Node.js Backend Framework ]
-          |
-          | (POST /query) -> Requests Semantic Match
-          v
-[ Python ML Service (Faiss CPU) ] -> Matches Cosine similarity inside Document Space
-          |
-          v
-[ Node.js Backend ] -> Injects returned Syllabus Strings into System Prompt
-          |
-          v
-[ OpenAI GPT-4 API ] -> Formulates precise educational response
-          |
-          v
-[ ChatPanel UI ] -> Displays Syllabus-Aware response
+```
+Frontend (React + Vite + Zustand)
+    │
+    ├── Dashboard ──► Goals CRUD (Zustand localStorage)
+    │                    │
+    │                    ├── Status: To Do → In Progress → Quiz → Completed (LOCKED)
+    │                    └── Progress: auto-calculated from subtask completion
+    │
+    ├── Quiz Modal ──► POST /api/generate-quiz ──► Node Backend
+    │                                                 │
+    │                                                 ├── Query ML Service (FAISS context)
+    │                                                 └── Call OpenRouter (generate 5 MCQs)
+    │
+    ├── Chat Panel ──► POST /api/chat ──► Node Backend
+    │                                        │
+    │                                        ├── Query ML (FAISS)
+    │                                        ├── Build prompt + context
+    │                                        └── Call OpenRouter → sanitize → return
+    │
+    └── Syllabus Upload ──► POST /api/generate-goals ──► Node Backend
+                                                            │
+                                                            ├── Call OpenRouter (goal JSON)
+                                                            └── Fire-and-forget: POST /store to ML
 ```
 
 ---
 
-## 3. Technologies Used
+## 2. Dashboard Metrics (Explained)
 
-**Frontend (React + Vite)**
-- `pdfjs-dist`: Native PDF vector mapping text extraction.
-- `tesseract.js`: Browser-native WASM implementation for OCR analysis of Scanned PDFs.
-- `Zustand`: Global state tracking.
-- `TailwindCSS`: Floating, adaptive, dark-mode aware UI rendering.
+### Stat Cards
 
-**Backend (Node Express)**
-- `Express`: Main orchestration HTTP bridge.
-- `OpenAI SDK`: Model integration.
+| Metric | Formula | Source |
+|--------|---------|--------|
+| **Total Goals** | `goals.length` | Zustand store |
+| **In Progress** | `goals.filter(status === 'In Progress').length` | Zustand store |
+| **Completed** | `goals.filter(status === 'Completed').length` | Zustand store |
+| **Success Rate** | `Math.round((completed / total) × 100)` | Derived |
 
-**Machine Learning Service (Python)**
-- `FastAPI`: High-speed local microservice routing.
-- `Sentence-Transformers`: Advanced NLP embeddings model (`all-MiniLM-L6-v2`).
-- `Faiss-CPU`: Meta's ultra-dense L2 similarity local Vector Store.
+### Stat Subtexts (Previously Hardcoded)
 
----
+The green percentage values (+12%, +5%, etc.) were **previously hardcoded** with no data behind them. They are now replaced with:
 
-## 4. ML System Explanation
-The ML system bypasses traditional databases by storing semantic weight natively in RAM.
-
-- **Embeddings:** When text is sent to the `/store` endpoint, it's chunked by sentence groupings and pushed through `all-MiniLM-L6-v2`. This generates a 384-dimension numerical array (Vector) representing the innate "meaning" of that document segment.
-- **Vector Database (Faiss):** Meta's `faiss-cpu` is used because it runs generically across all operating systems without requiring C++ compilers (unlike older versions of ChromaDB). The vectors are indexed using an `IndexFlatL2` matrix.
-- **Retrieval Logic:** When the user enters a question, the query string is converted into identical 384-dimension weights. Faiss runs geometric distance formulas (L2 Normalization) against the entire index, returning the closest mathematical matches—which equates to the highest textual relevance.
+| Stat | New Subtext | Logic |
+|------|-------------|-------|
+| Total Goals | `"8 total"` | Actual count |
+| In Progress | `"2 overdue"` or `"On track"` | Checks deadline vs current date |
+| Completed | `"4 done"` | Actual count |
+| Success Rate | `"50%"` | Same as value |
 
 ---
 
-## 5. PDF Processing Pipeline
-Instead of relying solely on generic text extractors which crash on scanned images, the frontend has a powerful multi-stage safety net:
-1. **Extraction attempt:** `pdfjs-dist` attempts algorithmic layout extraction.
-2. **OCR Fallback:** If the PDF returns a text boundary representing purely images/scans (`text.trim() === ""`), `tesseract.js` intercepts. It draws the PDF across an invisible HTML `<canvas>`, scans the image data natively, and transcribes visual data to text.
-3. **Cleaning:** The final raw text is stripped of double-spacing and clipped down to `15,000` maximum constraints to prevent crashing external LLM Token Limits.
- 
----
+## 3. Goal Lifecycle (State Machine)
 
-## 6. Chatbot System
-The `<ChatPanel />` is an absolute-positioned floating layer embedded at the application root (`App.tsx`). This allows the user to access Syllabus guidance independently of what tab they evaluate.
-When users submit questions, the Node Backend forces the ML Service to inject the top 3 most relevant textual document chunks directly into OpenAI's hidden context parameters. This creates a firewall that keeps outputs grounded exactly within syllabus scope rather than random internet hallucinations.
-
----
-
-## 7. API Routing References
-
-### Node Backend Routes (`port 5001`)
-- `POST /api/generate-goals`: Expects `{ syllabusText }`. Returns JSON-encoded object arrays.
-- `POST /api/chat`: Expects `{ query, history }`. Retrieves contextual buffers and maps LLM completion responses.
-
-### Python ML Routes (`port 8000`)
-- `POST /store`: Expects `{ document_text }`. Triggers internal Faiss matrix updates.
-- `POST /query`: Expects `{ query, n_results }`. Returns `{ context }` strings containing exact chunk matches.
-
----
-
-## 8. Setup & Execution Guide
-
-The system uses parallel localized processing. Ensure both services are booted:
-
-**1. Launch the UI & Node Backend**
-```bash
-# Terminal 1: Root Project
-npm run dev
-
-# Terminal 2: Node Express Backend
-cd backend
-npm run dev
+```
+    ┌──────────┐     ┌─────────────┐     ┌───────┐     ┌───────────┐
+    │  To Do   │────►│ In Progress │────►│ Quiz  │────►│ Completed │
+    └──────────┘     └─────────────┘     └───────┘     └───────────┘
+         │                 ▲                 │               🔒
+         │                 │    score < 80%  │          (LOCKED)
+         │                 └─────────────────┘
+         │
+         └── Auto-transitions to "In Progress" when first subtask is checked
 ```
 
-**2. Launch the ML RAG Pipeline**
+### Rules
+
+1. **To Do → In Progress**: Manual dropdown OR auto on first subtask check
+2. **In Progress → Completed**: ONLY via quiz (80% pass rate, 4/5 questions)
+3. **Completed → anything**: ❌ BLOCKED — `updateGoal()` silently rejects
+4. **Dropdown**: No "Completed" option — only "To Do" and "In Progress"
+5. **Completed goals**: Show locked badge with 🔒 icon instead of dropdown
+
+### Progress Bar (Dynamic)
+
+Progress is automatically recalculated when subtasks are toggled:
+```
+progress = Math.round((completedSubtasks / totalSubtasks) × 100)
+```
+
+If a goal has no subtasks, progress stays at 0% until quiz completion sets it to 100%.
+
+---
+
+## 4. XP System (Redesigned)
+
+### XP Award Table
+
+| Action | XP Awarded |
+|--------|-----------|
+| Complete an **Easy** goal | +50 |
+| Complete a **Medium** goal | +100 |
+| Complete a **Hard** goal | +150 |
+| Unlock an achievement | +achievement.xpReward |
+
+### Level Formula
+```
+level = Math.floor(totalXP / 1000) + 1
+```
+
+### XP Recalculation
+
+On dashboard mount, `recalculateXP()` runs once to fix corrupted localStorage:
+```
+correctXP = Σ(completed goals × difficultyXP) + Σ(unlocked achievements × achievementXP)
+```
+
+This overwrites any accumulated errors from the pre-fix era.
+
+### Duplicate Prevention (3 layers)
+
+1. **Frontend**: `updateGoal()` checks `prevGoal.status !== 'Completed'` before awarding XP
+2. **Frontend**: `unlockAchievement()` checks `!existing.unlockedAt` before awarding bonus XP
+3. **Database**: `goal_progress` table has `UNIQUE(goal_id)` constraint — double-completion raises exception
+
+---
+
+## 5. Quiz System
+
+### Flow
+
+1. User clicks **"Quiz"** button on an In Progress goal
+2. `QuizModal` opens and calls `POST /api/generate-quiz`
+3. Backend:
+   - Fetches ML context via `POST /query` with goal title (FAISS)
+   - If ML context empty, falls back to goal description
+   - Sends context to OpenRouter with MCQ generation prompt
+   - Returns `{ questions: [{ question, options, correct }] }`
+4. User answers 5 questions one at a time
+5. Score calculated: if ≥ 4/5 (80%) → `completeGoalViaQuiz()` is called
+6. Store marks goal as Completed, awards difficulty-based XP, updates streak and achievements
+
+### API: `POST /api/generate-quiz`
+
+**Request:**
+```json
+{
+  "goalTitle": "Operating System Components",
+  "goalDescription": "Learn about processes, memory management..."
+}
+```
+
+**Response:**
+```json
+{
+  "questions": [
+    {
+      "question": "What is a process in an operating system?",
+      "options": [
+        "A) A hardware component",
+        "B) An instance of a running program",
+        "C) A type of memory",
+        "D) A file system"
+      ],
+      "correct": "B"
+    }
+  ]
+}
+```
+
+---
+
+## 6. Achievement System
+
+### Definitions
+
+| ID | Title | Trigger | Max | XP |
+|----|-------|---------|-----|-----|
+| first-goal | First Steps | Complete 1 goal | 1 | 50 |
+| complete-5 | Goal Getter | Complete 5 goals | 5 | 200 |
+| complete-25 | Goal Guru | Complete 25 goals | 25 | 500 |
+| complete-100 | Goal Grandmaster | Complete 100 goals | 100 | 2000 |
+| streak-3 | Getting Started | 3-day streak | 3 | 100 |
+| streak-7 | Week Warrior | 7-day streak | 7 | 250 |
+| streak-30 | Monthly Master | 30-day streak | 30 | 1000 |
+| streak-100 | Century Champion | 100-day streak | 100 | 5000 |
+| speed-demon | Speed Demon | Complete within 24h | 1 | 300 |
+| early-bird | Early Bird | Complete before 8 AM | 1 | 150 |
+| night-owl | Night Owl | Complete after 10 PM | 1 | 150 |
+| perfect-week | Perfect Week | 7 consecutive daily completions | 7 | 750 |
+
+### Unlock Logic
+
+1. `checkAchievements()` runs after every goal completion
+2. Scans all achievements, calculates current progress from state
+3. If `progress >= maxProgress` AND `!unlockedAt` → `unlockAchievement()`
+4. `unlockAchievement()` sets timestamp + awards bonus XP
+
+### Why XP Mismatch Happens
+
+The original XP system had no guards:
+- Changing a goal to "Completed" multiple times → +100 XP each time
+- Re-unlocking achievements → duplicate bonus XP
+- No recalculation mechanism
+
+Now fixed with:
+- Status transition guard (only first `→ Completed` awards XP)
+- Achievement unlock guard (`unlockedAt` check)
+- `recalculateXP()` on mount corrects any legacy corruption
+
+---
+
+## 7. ML Service (Python — FAISS)
+
+**Location:** `ml_service/main.py` | **Port:** 8000
+
+### Embeddings
+
+Model: `all-MiniLM-L6-v2` (384-dim, L2-normalized)
+
+### `POST /store`
+Ingests document text → splits into chunks → encodes → adds to FAISS index.
+
+### `POST /query`
+Encodes query → searches FAISS for top-N nearest neighbors → returns joined text.
+
+### Important Caveats
+- **In-memory only** — FAISS index is lost on restart
+- **No user isolation** — all users share one vector store
+- Model loads lazily in background thread on first request
+
+---
+
+## 8. Backend Flow (Node.js)
+
+**Location:** `backend/index.js` | **Port:** 5001
+
+### OpenRouter Config
+```
+baseURL: "https://openrouter.ai/api/v1"
+model:   "mistralai/mistral-7b-instruct-v0.1"
+apiKey:  OPENROUTER_API_KEY (from .env)
+```
+
+### Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/generate-goals` | Parse syllabus → return goal JSON |
+| POST | `/api/chat` | RAG-powered doubt solver |
+| POST | `/api/generate-quiz` | Generate 5 MCQs for goal validation |
+
+### Response Sanitizer
+Applied only to `/api/chat` responses:
+- `## Heading` → `**Heading**`
+- Triple+ asterisks → double
+- Stray `*` → `•`
+- Dash bullets → `•`
+- Excessive blank lines collapsed
+
+---
+
+## 9. Database Schema (Supabase/PostgreSQL)
+
+### Tables
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Profile extending auth.users |
+| `goals` | Learning goals with status, difficulty, deadline |
+| `goal_progress` | Completion receipts (UNIQUE per goal — prevents double XP) |
+| `user_xp` | Aggregated XP, level, streak (1:1 with users) |
+| `achievements` | Achievement definitions (seeded once) |
+| `user_achievements` | Per-user progress (UNIQUE per user+achievement) |
+| `syllabus_imports` | PDF upload audit trail |
+| `quiz_attempts` | Every quiz taken (score, questions, pass/fail) |
+
+### Atomic Completion RPC: `complete_goal(goal_id, user_id)`
+
+Server-side function that atomically:
+1. Locks the goal row (FOR UPDATE)
+2. Checks not already completed
+3. Calculates difficulty-based XP
+4. Inserts completion receipt
+5. Updates XP + streak
+6. Updates all achievement progress
+7. Auto-unlocks maxed achievements + awards bonus XP
+8. Returns full updated state as JSONB
+
+Double-completion is impossible due to `UNIQUE(goal_id)` on `goal_progress`.
+
+---
+
+## 10. Difficulty & Time Estimation
+
+### How Difficulty Is Set
+- **AI-generated goals**: The OpenRouter prompt instructs `"difficulty": "Easy" // or Medium, Hard`. The AI infers difficulty from topic complexity.
+- **Manual goals**: Default to "Medium". User can customize later.
+
+### XP Mapping
+```
+Easy   → 50 XP
+Medium → 100 XP
+Hard   → 150 XP
+```
+
+### Estimated Time
+Set by the AI based on topic scope. Stored in goal notes as metadata string (e.g., "Estimated Time: 10 hours").
+
+---
+
+## 11. Deadline System
+
+### How It Works
+- Goals can have a `deadline` field (ISO date string)
+- On dashboard mount, `checkDeadlines()` runs
+- UI shows a red "⚠ Overdue" badge on non-completed goals past their deadline
+- The "In Progress" stat card shows count of overdue goals
+
+### No Auto-Fail
+Overdue goals are **not** automatically failed or penalized. The badge serves as a visual warning. Implementing streak penalties for missed deadlines is a future enhancement.
+
+---
+
+## 12. Running Locally
+
 ```bash
-# Terminal 3: Machine Learning Service
+# 1. ML Service (Python)
 cd ml_service
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
 
-# Activate Environment (Windows example)
-.\venv\Scripts\Activate.ps1
+# 2. Backend (Node)
+cd backend
+npm install
+node index.js          # runs on port 5001
 
-# Start FastAPI
-py -m uvicorn main:app --reload --port 8000
+# 3. Frontend (Vite)
+cd ..
+npm install
+npm run dev            # runs on port 5173
 ```
-*(Verify health checks at `localhost:8000/docs`)*
+
+### Environment Variables
+- `backend/.env` → `OPENROUTER_API_KEY`, `PORT`, `ML_API_URL`
+- Root `.env` → `VITE_API_URL`, Supabase keys
 
 ---
 
-## 9. Current Limitations & Edge Cases
-- **Volatile Storage:** Currently, `faiss-cpu` holds indexes in generic memory space. Rebooting the `FastAPI` instance clears the document cache. A persistence layer (e.g. `faiss.write_index`) should be integrated for production deployaments.
-- **Context Bleed:** Because indexes do not inherently track `{ user_id }` metadata mappings against Faiss tables right now, running this natively in production could crosscontaminate multiple students uploading different PDFs across concurrent sessions.
+## 13. Important Notes
 
----
-
-## 10. Future Improvements
-1. **User Segregation Indexing:** Move away from unified `IndexFlatL2` to filtered metadata structures (like `lancedb` or persistent user-scoped collections) to keep individual student profiles clean.
-2. **Async OCR:** `Tesseract.js` takes large CPU cycles on the main thread for >5 page documents. Shift this routine directly into Web Workers to prevent frame drops in the React Render tree.
-3. **Optimized Embedders:** While `MiniLM` is fast, exploring ONNX Runtime accelerated models could yield even faster localized embeddings for minimal CPU stress.
+- **FAISS is ephemeral** — restart = data loss. Re-upload PDFs.
+- **No user isolation in ML** — shared vector store across all users.
+- **Chat history is session-only** — page refresh clears it.
+- **Zustand persist** — all goals/XP/achievements stored in `localStorage` key `learning-tracker-storage`.
+- **Supabase schema is deployed** but the app currently reads/writes from localStorage only. DB migration is a future phase.

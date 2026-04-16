@@ -16,9 +16,7 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
     description: '',
     category: 'Programming',
     targetDate: '',
-    notes: '',
     links: [''],
-    subTasks: [{ id: '1', title: '', completed: false }],
   });
 
   const categories = ['Programming', 'Design', 'Business', 'Language', 'Music', 'Other'];
@@ -31,16 +29,37 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
       return;
     }
 
+    if (!formData.targetDate) {
+      toast.error('A precise target deadline is mandatory.');
+      return;
+    }
+
+    const selectedTime = new Date(formData.targetDate).getTime();
+    const nowTime = Date.now();
+    const msIn24Hours = 24 * 60 * 60 * 1000;
+
+    if (selectedTime <= nowTime) {
+      toast.error('Deadline must be set in the future.');
+      return;
+    }
+
+    if (selectedTime - nowTime > msIn24Hours) {
+      toast.error('Strict Mode: Goals cannot exceed a 24-hour deadline.');
+      return;
+    }
+
     const newGoal = {
       title: formData.title,
       description: formData.description,
       category: formData.category,
+      difficulty: 'Medium' as const,
       progress: 0,
       status: 'To Do' as const,
       timeSpent: '0 hours',
       targetDate: formData.targetDate,
-      subTasks: formData.subTasks.filter(task => task.title.trim()),
-      notes: formData.notes,
+      deadline: formData.targetDate || '',
+      subTasks: [],
+      notes: '',
       links: formData.links.filter(link => link.trim()),
     };
 
@@ -52,27 +71,10 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
       description: '',
       category: 'Programming',
       targetDate: '',
-      notes: '',
       links: [''],
-      subTasks: [{ id: '1', title: '', completed: false }],
     });
   };
 
-  const addSubTask = () => {
-    setFormData(prev => ({
-      ...prev,
-      subTasks: [...prev.subTasks, { id: Date.now().toString(), title: '', completed: false }]
-    }));
-  };
-
-  const updateSubTask = (id: string, title: string) => {
-    setFormData(prev => ({
-      ...prev,
-      subTasks: prev.subTasks.map(task => 
-        task.id === id ? { ...task, title } : task
-      )
-    }));
-  };
 
   const addLink = () => {
     setFormData(prev => ({
@@ -165,10 +167,10 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Target Date
+                    Target Date & Time
                   </label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     value={formData.targetDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, targetDate: e.target.value }))}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
@@ -176,33 +178,6 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                 </div>
               </div>
 
-              {/* Sub Tasks */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Sub Tasks
-                </label>
-                <div className="space-y-2">
-                  {formData.subTasks.map((task, index) => (
-                    <div key={task.id} className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={task.title}
-                        onChange={(e) => updateSubTask(task.id, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
-                        placeholder={`Sub task ${index + 1}`}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={addSubTask}
-                  className="mt-2 flex items-center space-x-2 text-premium-accent hover:text-indigo-400 text-sm font-medium transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Sub Task</span>
-                </button>
-              </div>
 
               {/* Links */}
               <div>
@@ -233,19 +208,6 @@ const CreateGoalModal: React.FC<CreateGoalModalProps> = ({ isOpen, onClose }) =>
                 </button>
               </div>
 
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Notes
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-premium-accent focus:border-transparent bg-white dark:bg-premium-secondary text-gray-900 dark:text-white transition-all"
-                  rows={3}
-                  placeholder="Additional notes..."
-                />
-              </div>
 
               {/* Submit Button */}
               <div className="flex justify-end space-x-4 pt-4">

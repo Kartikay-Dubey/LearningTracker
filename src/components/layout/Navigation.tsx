@@ -24,23 +24,11 @@ const Navigation: React.FC = () => {
   const isDarkMode = useStore((state) => state.isDarkMode);
   const toggleDarkMode = useStore((state) => state.toggleDarkMode);
   const logout = useStore((state) => state.logout);
+  const isGuestMode = useStore((state) => state.isGuestMode);
+  const notifications = useStore((state) => state.notifications);
+  const markNotificationRead = useStore((state) => state.markNotificationRead);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  // Track login state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // Check session on mount
-    supabase.auth.getSession().then(({ data }) => {
-      setIsLoggedIn(!!data.session);
-    });
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
-    return () => {
-      listener?.subscription.unsubscribe();
-    };
-  }, []);
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -94,24 +82,60 @@ const Navigation: React.FC = () => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
-            {/* Search */}
-            <motion.button
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-premium-secondary rounded-lg transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Search className="w-5 h-5" />
-            </motion.button>
-
             {/* Notifications */}
-            <motion.button
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-premium-secondary rounded-lg transition-colors relative"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-            </motion.button>
+            <div className="relative">
+              <motion.button
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-premium-secondary rounded-lg transition-colors relative"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-premium-primary"></span>
+                )}
+              </motion.button>
+
+              {/* Dropdown menu */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-premium-card rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden z-50">
+                  <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                    <span className="text-xs text-gray-500 bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                      {notifications.filter(n => !n.read).length} new
+                    </span>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                        <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                        <p className="text-sm">You're all caught up!</p>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div 
+                          key={notif.id} 
+                          onClick={() => markNotificationRead(notif.id)}
+                          className={`p-4 border-b border-gray-50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors ${!notif.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                        >
+                          <div className="flex gap-3 items-start">
+                            <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${notif.read ? 'bg-transparent' : notif.type === 'error' ? 'bg-red-500' : notif.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                            <div>
+                              <p className={`text-sm font-medium ${notif.read ? 'text-gray-600 dark:text-gray-300' : 'text-gray-900 dark:text-white'}`}>
+                                {notif.title}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {notif.message}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Theme Toggle */}
             <motion.button
@@ -124,7 +148,7 @@ const Navigation: React.FC = () => {
             </motion.button>
 
             {/* Logout Button */}
-            {isLoggedIn && (
+            {!isGuestMode && (
               <motion.button
                 className="p-2 text-red-500 hover:text-white hover:bg-red-600 rounded-lg transition-colors"
                 whileHover={{ scale: 1.05 }}
@@ -134,6 +158,20 @@ const Navigation: React.FC = () => {
               >
                 <LogOut className="w-5 h-5" />
               </motion.button>
+            )}
+
+            {/* Login / Sync Button for Guests */}
+            {isGuestMode && (
+              <Link to="/auth">
+                <motion.button
+                  className="hidden md:flex items-center space-x-2 px-4 py-2 bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-lg font-medium transition-all shadow-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <User className="w-4 h-4" />
+                  <span>Login / Sync</span>
+                </motion.button>
+              </Link>
             )}
 
             {/* Mobile menu button */}

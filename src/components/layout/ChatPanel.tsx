@@ -40,7 +40,8 @@ const ChatPanel: React.FC = () => {
       // Structure history for completion
       const history = messages.map(m => ({ role: m.role, content: m.content }));
       
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const RAW_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const API_URL = RAW_URL.replace(/\/+$/, "");
       const res = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,7 +65,7 @@ const ChatPanel: React.FC = () => {
 
       setMessages(prev => [...prev, { role: "assistant", content: assistantMsg }]);
     } catch (err: any) {
-      console.error(err);
+      console.error("API ERROR:", err.response?.data || err.message || err);
       setMessages(prev => [...prev, { role: "assistant", content: err.message || "Sorry, I am having trouble connecting to the server. Please try again later." }]);
     } finally {
       setIsLoading(false);
