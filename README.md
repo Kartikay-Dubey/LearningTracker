@@ -4,7 +4,7 @@
 
 ---
 
-🔗 **Live App**: (https://learning-tracker-alpha.vercel.app/) 
+🔗 **Live App**: (https://learning-tracker-aggo.vercel.app/) 
 
 ## ✨ Overview
 
